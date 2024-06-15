@@ -1,0 +1,60 @@
+<div>
+    proyecto/
+    ├── README.md
+    ├── LICENSE
+    ├── package.json
+    ├── src/
+    │   ├── application/
+    │   │   ├── useCases/                 # Casos de uso de la aplicación
+    │   │   │   ├── getUserData.js
+    │   │   │   └── tradeCrypto.js
+    │   │   ├── controllers/              # Controladores de la API
+    │   │   │   ├── getUserDataController.js
+    │   │   │   └── tradeCryptoController.js
+    │   │   └── ports/                    # Puertos de entrada y salida
+    │   │       ├── getUserDataPort.js
+    │   │       └── tradeCryptoPort.js
+    │   ├── domain/
+    │   │   ├── entities/                # Entidades del dominio
+    │   │   │   ├── User.js
+    │   │   │   └── Wallet.js
+    │   │   ├── valueObjects/            # Objetos de valor
+    │   │   │   ├── Amount.js
+    │   │   │   └── CryptoCurrency.js
+    │   │   └── services/                # Servicios del dominio
+    │   │       ├── getUserDataService.js
+    │   │       └── tradeCryptoService.js
+    │   ├── infrastructure/
+    │   │   ├── adapters/
+    │   │   │   ├── binanceApiAdapter.js # Adaptador para la API de Binance
+    │   │   │   └── tensorflowAiAdapter.js # Adaptador para la IA de TensorFlow
+    │   │   ├── datasets/                 # Conjuntos de datos de entrenamiento y prueba
+    │   │   │   ├── training.json
+    │   │   │   └── test.json
+    │   │   ├── models/                   # Modelos de IA entrenados
+    │   │   │   │   ├── metadata.json     # Metadatos del modelo
+    │   │   │   │   ├── model.h5         # Archivo del modelo entrenado
+    │   │   │   │   └── model.meta        # Archivo de metadatos del modelo
+    │   │   ├── training/                # Lógica de entrenamiento del modelo
+    │   │   │   ├── config.json           # Configuración del entrenamiento
+    │   │   │   ├── train.js             # Script de entrenamiento
+    │   │   │   └── evaluate.js          # Script de evaluación
+    │   │   └── database/                 # Base de datos
+    │   │       ├── index.js
+    │   │       └── migrations/
+    │   │       └── repositories/            # Repositorios
+    │   │           ├── userRepository.js
+    │   │           └── walletRepository.js
+    │   └── index.js                      # Punto de entrada de la aplicación
+    ├── models/                            # Modelos de IA pre-entrenados (opcional)
+    │   ├── ...
+    │   └── ...
+    ├── tests/                           # Pruebas unitarias y de integración
+    │   ├── application/
+    │   │   └── ...
+    │   ├── domain/
+    │   │   └── ...
+    │   ├── infrastructure/
+    │   │   └── ...
+    └── tsconfig.json
+</div>
