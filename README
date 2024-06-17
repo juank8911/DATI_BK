@@ -1,8 +1,9 @@
 <div>
-    proyecto/
+    DATI/
     ├── README.md
     ├── LICENSE
     ├── package.json
+    ├── config.ts
     ├── src/
     │   ├── application/
     │   │   ├── useCases/                 # Casos de uso de la aplicación
@@ -26,6 +27,8 @@
     │   │       └── tradeCryptoService.js
     │   ├── infrastructure/
     │   │   ├── adapters/
+    │   │   │   ├── models/
+    │   │   │   │   ├── TrinityModels.js  #modelo de Trinty conf de red neuro
     │   │   │   ├── binanceApiAdapter.js # Adaptador para la API de Binance
     │   │   │   └── tensorflowAiAdapter.js # Adaptador para la IA de TensorFlow
     │   │   ├── datasets/                 # Conjuntos de datos de entrenamiento y prueba
@@ -58,3 +61,14 @@
     │   │   └── ...
     └── tsconfig.json
 </div>
+
+
+<div>  Deseo crear una aplicación en Node.js con inteligencia artificial que se conecte a la API de Binance para obtener datos históricos y 
+    realizar los cálculos necesarios para determinar cuáles criptomonedas futuras pueden aumentar o disminuir su valor en un 0.20% en 30 segundos. 
+    La aplicación debe buscar patrones en los valores y comenzar a monitorear las monedas que puedan presentar este cambio. En el momento en 
+    que se considere oportuno, la aplicación deberá realizar las operaciones de compra y venta necesarias.
+
+    La aplicación se desarrollará paso a paso, creando un archivo a la vez. Cuando esté listo para continuar con el siguiente archivo, 
+    escribiré 'ok'. La aplicación tendrá una API más adelante para ver los datos desde una página web o una aplicación móvil. Se llamará DATI.
+    
+    Si es necesario, estaré encantado de aclarar cualquier detalle o pregunta adicional que pueda surgir durante el desarrollo del proyecto</div>
