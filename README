@@ -6,32 +6,32 @@
     ├── config.ts
     ├── src/
     │   ├── application/
-    │   │   ├── useCases/                 # Casos de uso de la aplicación
+    │   │   ├── useCases/                     # Casos de uso de la aplicación
     │   │   │   ├── getUserData.js
     │   │   │   └── tradeCrypto.js
-    │   │   ├── controllers/              # Controladores de la API
+    │   │   ├── controllers/                  # Controladores de la API
     │   │   │   ├── getUserDataController.js
     │   │   │   └── tradeCryptoController.js
-    │   │   └── ports/                    # Puertos de entrada y salida
+    │   │   └── ports/                        # Puertos de entrada y salida
     │   │       ├── getUserDataPort.js
     │   │       └── tradeCryptoPort.js
     │   ├── domain/
-    │   │   ├── entities/                # Entidades del dominio
+    │   │   ├── entities/                     # Entidades del dominio
     │   │   │   ├── User.js
     │   │   │   └── Wallet.js
-    │   │   ├── valueObjects/            # Objetos de valor
+    │   │   ├── valueObjects/                 # Objetos de valor
     │   │   │   ├── Amount.js
     │   │   │   └── CryptoCurrency.js
-    │   │   └── services/                # Servicios del dominio
+    │   │   └── services/                   # Servicios del dominio
     │   │       ├── getUserDataService.js
     │   │       └── tradeCryptoService.js
     │   ├── infrastructure/
     │   │   ├── adapters/
     │   │   │   ├── models/
-    │   │   │   │   ├── TrinityModels.js  #modelo de Trinty conf de red neuro
-    │   │   │   ├── binanceApiAdapter.js # Adaptador para la API de Binance
-    │   │   │   └── tensorflowAiAdapter.js # Adaptador para la IA de TensorFlow
-    │   │   ├── datasets/                 # Conjuntos de datos de entrenamiento y prueba
+    │   │   │   │   ├── TrinityModels.js    # modelo de Trinty conf de red neuro
+    │   │   │   ├── binanceApiAdapter.js    # Adaptador para la API de Binance
+    │   │   │   └── tensorflowAiAdapter.js  # Adaptador para la IA de TensorFlow
+    │   │   ├── datasets/                   # Conjuntos de datos de entrenamiento y prueba
     │   │   │   ├── training.json
     │   │   │   └── test.json
     │   │   ├── models/                   # Modelos de IA entrenados
