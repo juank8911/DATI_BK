@@ -1,18 +1,47 @@
 // src/infrastructure/adapters/binanceApiAdapter.js
 
+// src/infrastructure/adapters/binanceApiAdapter.js
+
 const axios = require('axios');
 const crypto = require('crypto');
+const fs = require('fs'); // Importar el módulo fs para trabajar con archivos
+const config = require('./config'); // Importar el archivo de configuración
 
-const API_KEY = 'TU_API_KEY'; // Reemplaza con tu clave API de Binance
-const SECRET_KEY = 'TU_SECRET_KEY'; // Reemplaza con tu clave secreta de Binance
-const BINANCE_API_URL = 'https://fapi.binance.com/fapi/v1/';
+
+// Función para obtener las velas de los tokens futuros y guardarlas en un archivo JSON
+async function getFuturesCandlesticksData() {
+  try {
+    const futuresTokens = await getFuturesTokens();
+    const candlesticksData = [];
+
+    for (const token of futuresTokens) {
+      const symbol = token.symbol;
+      const candlesticks = await getFutureCandlesticks(symbol, '30s', 120); // 30 segundos, 3 horas atrás (120 velas)
+      candlesticksData.push({
+        nombre: symbol,
+        data: candlesticks,
+      });
+    }
+
+    // Guardar el JSON en el archivo training.json
+    const filePath = './infrastructure/datasets/training.json';
+    fs.writeFileSync(filePath, JSON.stringify(candlesticksData, null, 2)); // Guardar con formato
+
+    console.log('Datos de velas de tokens futuros guardados en:', filePath);
+    return candlesticksData;
+  } catch (error) {
+    console.error('Error al obtener las velas de los tokens futuros:', error);
+    return null;
+  }
+}
+
 
 // Función para obtener la lista de tokens futuros
 async function getFuturesTokens() {
   try {
-    const response = await axios.get(`${BINANCE_API_URL}exchangeInfo`, {
+    const response = await axios.get(`${config.BINANCE_API_URL}exchangeInfo`, {
       headers: {
-        'X-MBX-APIKEY': API_KEY,
+        'X-MBX-APIKEY': config.API_KEY,
       },
     });
     return response.data.symbols.filter((symbol) => symbol.contractType === 'PERPETUAL');
@@ -26,10 +55,10 @@ async function getFuturesTokens() {
 async function getFutureCandlesticks(symbol, interval, limit) {
   try {
     const response = await axios.get(
-      `${BINANCE_API_URL}klines?symbol=${symbol}&interval=${interval}&limit=${limit}`,
+      `${config.BINANCE_API_URL}klines?symbol=${symbol}&interval=${interval}&limit=${limit}`,
       {
         headers: {
-          'X-MBX-APIKEY': API_KEY,
+          'X-MBX-APIKEY': config.API_KEY,
         },
       },
     );
@@ -43,9 +72,9 @@ async function getFutureCandlesticks(symbol, interval, limit) {
 // Función para obtener el precio actual de un símbolo
 async function getCurrentPrice(symbol) {
   try {
-    const response = await axios.get(`${BINANCE_API_URL}ticker/price?symbol=${symbol}`, {
+    const response = await axios.get(`${config.BINANCE_API_URL}ticker/price?symbol=${symbol}`, {
       headers: {
-        'X-MBX-APIKEY': API_KEY,
+        'X-MBX-APIKEY': config.API_KEY,
       },
     });
     return parseFloat(response.data.price);
@@ -58,9 +87,9 @@ async function getCurrentPrice(symbol) {
 // Función para obtener la información de un símbolo
 async function getSymbolInfo(symbol) {
   try {
-    const response = await axios.get(`${BINANCE_API_URL}exchangeInfo`, {
+    const response = await axios.get(`${config.BINANCE_API_URL}exchangeInfo`, {
       headers: {
-        'X-MBX-APIKEY': API_KEY,
+        'X-MBX-APIKEY': config.API_KEY,
       },
     });
     return response.data.symbols.find((s) => s.symbol === symbol);
@@ -76,9 +105,9 @@ async function getWalletBalance() {
     const timestamp = Date.now();
     const signature = generateSignature('GET', '/fapi/v1/account', timestamp, '');
 
-    const response = await axios.get(`${BINANCE_API_URL}account`, {
+    const response = await axios.get(`${config.BINANCE_API_URL}account`, {
       headers: {
-        'X-MBX-APIKEY': API_KEY,
+        'X-MBX-APIKEY': config.API_KEY,
         'X-MBX-TIMESTAMP': timestamp,
         'X-MBX-SIGNATURE': signature,
       },
@@ -102,7 +131,7 @@ async function buyOrder(symbol, leverage, price) {
     );
 
     const response = await axios.post(
-      `${BINANCE_API_URL}orders`,
+      `${config.BINANCE_API_URL}orders`,
       {
         symbol,
         side: 'BUY',
@@ -113,7 +142,7 @@ async function buyOrder(symbol, leverage, price) {
       },
       {
         headers: {
-          'X-MBX-APIKEY': API_KEY,
+          'X-MBX-APIKEY': config.API_KEY,
           'X-MBX-TIMESTAMP': timestamp,
           'X-MBX-SIGNATURE': signature,
         },
@@ -138,7 +167,7 @@ async function sellOrder(symbol, leverage, price) {
     );
 
     const response = await axios.post(
-      `${BINANCE_API_URL}orders`,
+      `${config.BINANCE_API_URL}orders`,
       {
         symbol,
         side: 'SELL',
@@ -149,7 +178,7 @@ async function sellOrder(symbol, leverage, price) {
       },
       {
         headers: {
-          'X-MBX-APIKEY': API_KEY,
+          'X-MBX-APIKEY': config.API_KEY,
           'X-MBX-TIMESTAMP': timestamp,
           'X-MBX-SIGNATURE': signature,
         },
@@ -165,13 +194,14 @@ async function sellOrder(symbol, leverage, price) {
 // Función para generar la firma de la solicitud
 function generateSignature(method, path, timestamp, query) {
   const signature = crypto
-    .createHmac('sha256', SECRET_KEY)
+    .createHmac('sha256', config.SECRET_KEY)
     .update(`${method}\n${path}\n${timestamp}\n${query}`)
     .digest('hex');
   return signature;
 }
 
 module.exports = {
+  getFuturesCandlesticksData,
   getFuturesTokens,
   getFutureCandlesticks,
   getCurrentPrice,
