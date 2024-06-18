@@ -38,7 +38,7 @@ async function testBinanceConnection() {
       const res = {
         json: (data) => {
           console.log('Conexión exitosa con Binance. Lista de tokens futuros:');
-          console.log(data);
+          console.log(data.data.symbols[0]);
         },
         status: (code) => {
           return {
