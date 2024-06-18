@@ -5,7 +5,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
 const fs = require('fs'); // Importar el módulo fs para trabajar con archivos
-const config = require('./config'); // Importar el archivo de configuración
+const config = require('../../config'); // Importar el archivo de configuración
 
 
 // Función para obtener las velas de los tokens futuros y guardarlas en un archivo JSON

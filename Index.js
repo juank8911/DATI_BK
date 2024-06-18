@@ -2,7 +2,9 @@
 
 // Importa los módulos necesarios
 const express = require('express');
-const { getFuturesTokens } = require('./infrastructure/adapters/binanceApiAdapter');
+const { getFuturesTokens } = require('./src/infrastructure/adapters/binanceApiAdapter');
+const {initializeTrinityModel} = require('./src/infrastructure/adapters/models/trinityModel')
+//importar TensorFlow para node     
 // Crea una instancia de Express
 const app = express();
 const port = 3000;
