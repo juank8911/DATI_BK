@@ -2,37 +2,91 @@
 
 // Importa los módulos necesarios
 const express = require('express');
-const { getFuturesTokens } = require('./src/infrastructure/adapters/binanceApiAdapter');
-const {initializeTrinityModel} = require('./src/infrastructure/adapters/models/trinityModel')
+const bodyParser = require('body-parser')
+const { spawn } = require('child_process');
+const { getFuturesTokenprMiddleware, getFuturesCandlesticksDataMiddleware } = require('./src/infrastructure/adapters/binanceApiAdapter');
 //importar TensorFlow para node     
 // Crea una instancia de Express
 const app = express();
 const port = 3000;
-
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 // Ruta de prueba
 app.get('/', (req, res) => {
+
   res.send('¡Bienvenido a la aplicación DATI!');
 });
+
+app.get('/train', async (req, res) => {
+    try {
+      // Llama al middleware para obtener datos de velas y crear archivos de entrenamiento
+      await getFuturesCandlesticksDataMiddleware(req, res, () => {}); 
+  
+      // Responde al cliente con un mensaje de éxito
+      res.json({ message: 'Datos de entrenamiento creados correctamente.' });
+    } catch (error) {
+      console.error('Error al crear datos de entrenamiento:', error);
+      res.status(500).json({ error: 'Error al crear datos de entrenamiento.' });
+    }
+  });
 
 // Función para probar la conexión con Binance al iniciar la aplicación
 async function testBinanceConnection() {
     try {
-        const futuresTokens = await getFuturesTokens();
-        if (futuresTokens) {
-            console.log('Conexión exitosa con Binance. Lista de tokens futuros:');
-            console.log(futuresTokens);
-        } else {
-            console.error('Error: No se pudo obtener la lista de tokens futuros de Binance.');
-            process.exit(1); // Cierra la aplicación con código de error
+      // Create a mock request and response object
+      const req = {}; // Empty object for the request
+      const res = {
+        json: (data) => {
+          console.log('Conexión exitosa con Binance. Lista de tokens futuros:');
+          console.log(data.data.symbols[0]);
+        },
+        status: (code) => {
+          return {
+            json: (error) => {
+              console.error('Error al probar la conexión con Binance:', error);
+              process.exit(1); // Cierra la aplicación con código de error
+            }
+          };
         }
+      };
+      const next = () => {}; // Empty function for next
+  
+      // Call the middleware function
+      await getFuturesTokenprMiddleware(req, res, next);
     } catch (error) {
-        console.error('Error al probar la conexión con Binance:', error);
-        process.exit(1); // Cierra la aplicación con código de error
+      console.error('Error al probar la conexión con Binance:', error);
+      process.exit(1); // Cierra la aplicación con código de error
     }
-}
+  }
+
+  // Función para inicializar la AI de Python
+async function initializeAI() {
+    try {
+      // Ejecutar el script de Python para inicializar la AI
+      const pythonProcess = spawn('python', ['./src/trinity_ai/__init__.py', 'initialize_trinity_model']);
+  
+      // Manejar la salida del script de Python
+      pythonProcess.stdout.on('data', (data) => {
+        console.log(`Salida del script de Python: ${data}`);
+      });
+  
+      pythonProcess.stderr.on('data', (data) => {
+        console.error(`Error en el script de Python: ${data}`);
+      });
+  
+      // Esperar a que el script de Python termine
+      await new Promise((resolve) => pythonProcess.on('close', resolve));
+  
+      console.log('AI de Python inicializada correctamente.');
+    } catch (error) {
+      console.error('Error al inicializar la AI de Python:', error);
+      process.exit(1); // Cierra la aplicación con código de error
+    }
+  }
 
 // Inicia el servidor y prueba la conexión con Binance
 app.listen(port, async () => {
-    console.log(`La aplicación DATI está corriendo en http://localhost:${port}`);
+    // await initializeAI();
     await testBinanceConnection();
+    console.log(`La aplicación DATI está corriendo en http://localhost:${port}`);
 });

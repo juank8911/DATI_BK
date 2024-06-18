@@ -1,213 +1,123 @@
 // src/infrastructure/adapters/binanceApiAdapter.js
 
-// src/infrastructure/adapters/binanceApiAdapter.js
+const BinanceApiService = require('../../domain/services/binanceApiService');
 
-const axios = require('axios');
-const crypto = require('crypto');
-const fs = require('fs'); // Importar el módulo fs para trabajar con archivos
-const config = require('../../config'); // Importar el archivo de configuración
-
-
-// Función para obtener las velas de los tokens futuros y guardarlas en un archivo JSON
-async function getFuturesCandlesticksData() {
+// Middleware para obtener datos de velas de tokens futuros
+async function getFuturesCandlesticksDataMiddleware(req, res, next) {
   try {
-    const futuresTokens = await getFuturesTokens();
-    const candlesticksData = [];
-
-    for (const token of futuresTokens) {
-      const symbol = token.symbol;
-      const candlesticks = await getFutureCandlesticks(symbol, '30s', 120); // 30 segundos, 3 horas atrás (120 velas)
-      candlesticksData.push({
-        nombre: symbol,
-        data: candlesticks,
-      });
-    }
-
-    // Guardar el JSON en el archivo training.json
-    const filePath = './infrastructure/datasets/training.json';
-    fs.writeFileSync(filePath, JSON.stringify(candlesticksData, null, 2)); // Guardar con formato
-
-    console.log('Datos de velas de tokens futuros guardados en:', filePath);
-    return candlesticksData;
+    const candlesticksData = await BinanceApiService.getFuturesCandlesticksData();
+    res.json(candlesticksData);
   } catch (error) {
-    console.error('Error al obtener las velas de los tokens futuros:', error);
-    return null;
+    console.error('Error en el middleware:', error);
+    res.status(500).json({ error: 'Error al obtener datos de velas' });
+  }
+}
+
+// Middleware para obtener la lista de tokens futuros
+async function getFuturesTokensMiddleware(req, res, next) {
+  try {
+    const futuresTokens = await BinanceApiService.getFuturesTokens();
+    res.json(futuresTokens);
+  } catch (error) {
+    console.error('Error en el middleware:', error);
+    res.status(500).json({ error: 'Error al obtener la lista de tokens futuros' });
+  }
+}
+
+// Middleware para obtener datos históricos de velas de un token futuro
+async function getFutureCandlesticksMiddleware(req, res, next) {
+  try {
+    const { symbol, interval, limit } = req.query;
+    const candlesticks = await BinanceApiService.getFutureCandlesticks(symbol, interval, limit);
+    res.json(candlesticks);
+  } catch (error) {
+    console.error('Error en el middleware:', error);
+    res.status(500).json({ error: 'Error al obtener datos históricos de velas' });
+  }
+}
+
+// Middleware para obtener el precio actual de un símbolo
+async function getCurrentPriceMiddleware(req, res, next) {
+  try {
+    const { symbol } = req.query;
+    const price = await BinanceApiService.getCurrentPrice(symbol);
+    res.json({ price });
+  } catch (error) {
+    console.error('Error en el middleware:', error);
+    res.status(500).json({ error: 'Error al obtener el precio actual' });
+  }
+}
+
+// Middleware para obtener la información de un símbolo
+async function getSymbolInfoMiddleware(req, res, next) {
+  try {
+    const { symbol } = req.query;
+    const symbolInfo = await BinanceApiService.getSymbolInfo(symbol);
+    res.json(symbolInfo);
+  } catch (error) {
+    console.error('Error en el middleware:', error);
+    res.status(500).json({ error: 'Error al obtener la información del símbolo' });
+  }
+}
+
+// Middleware para obtener el balance de la cuenta
+async function getWalletBalanceMiddleware(req, res, next) {
+  try {
+    const balance = await BinanceApiService.getWalletBalance();
+    res.json(balance);
+  } catch (error) {
+    console.error('Error en el middleware:', error);
+    res.status(500).json({ error: 'Error al obtener el balance de la cuenta' });
+  }
+}
+
+// Middleware para realizar una operación de compra
+async function buyOrderMiddleware(req, res, next) {
+  try {
+    const { symbol, leverage, price } = req.body;
+    const order = await BinanceApiService.buyOrder(symbol, leverage, price);
+    res.json(order);
+  } catch (error) {
+    console.error('Error en el middleware:', error);
+    res.status(500).json({ error: 'Error al realizar la operación de compra' });
+  }
+}
+
+// Middleware para realizar una operación de venta
+async function sellOrderMiddleware(req, res, next) {
+  try {
+    const { symbol, leverage, price } = req.body;
+    const order = await BinanceApiService.sellOrder(symbol, leverage, price);
+    res.json(order);
+  } catch (error) {
+    console.error('Error en el middleware:', error);
+    res.status(500).json({ error: 'Error al realizar la operación de venta' });
+  }
+
+}
+
+async function getFuturesTokenprMiddleware(req, res, next) {
+  try {
+    const info = await BinanceApiService.getFuturesTokenpr();
+    // console.log(info.data);
+    res.json(info); // Send the info as JSON response
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener lista de futuros' });
   }
 }
 
 
-// Función para obtener la lista de tokens futuros
-async function getFuturesTokens() {
-  try {
-    const response = await axios.get(`${config.BINANCE_API_URL}exchangeInfo`, {
-      headers: {
-        'X-MBX-APIKEY': config.API_KEY,
-      },
-    });
-    return response.data.symbols.filter((symbol) => symbol.contractType === 'PERPETUAL');
-  } catch (error) {
-    console.error('Error al obtener la lista de tokens futuros:', error);
-    return null;
-  }
-}
-
-// Función para obtener datos históricos de velas de un token futuro
-async function getFutureCandlesticks(symbol, interval, limit) {
-  try {
-    const response = await axios.get(
-      `${config.BINANCE_API_URL}klines?symbol=${symbol}&interval=${interval}&limit=${limit}`,
-      {
-        headers: {
-          'X-MBX-APIKEY': config.API_KEY,
-        },
-      },
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error al obtener datos históricos de velas del token futuro:', error);
-    return null;
-  }
-}
-
-// Función para obtener el precio actual de un símbolo
-async function getCurrentPrice(symbol) {
-  try {
-    const response = await axios.get(`${config.BINANCE_API_URL}ticker/price?symbol=${symbol}`, {
-      headers: {
-        'X-MBX-APIKEY': config.API_KEY,
-      },
-    });
-    return parseFloat(response.data.price);
-  } catch (error) {
-    console.error('Error al obtener el precio actual del símbolo:', error);
-    return null;
-  }
-}
-
-// Función para obtener la información de un símbolo
-async function getSymbolInfo(symbol) {
-  try {
-    const response = await axios.get(`${config.BINANCE_API_URL}exchangeInfo`, {
-      headers: {
-        'X-MBX-APIKEY': config.API_KEY,
-      },
-    });
-    return response.data.symbols.find((s) => s.symbol === symbol);
-  } catch (error) {
-    console.error('Error al obtener la información del símbolo:', error);
-    return null;
-  }
-}
-
-// Función para obtener el balance de la cuenta
-async function getWalletBalance() {
-  try {
-    const timestamp = Date.now();
-    const signature = generateSignature('GET', '/fapi/v1/account', timestamp, '');
-
-    const response = await axios.get(`${config.BINANCE_API_URL}account`, {
-      headers: {
-        'X-MBX-APIKEY': config.API_KEY,
-        'X-MBX-TIMESTAMP': timestamp,
-        'X-MBX-SIGNATURE': signature,
-      },
-    });
-    return response.data.assets;
-  } catch (error) {
-    console.error('Error al obtener el balance de la cuenta:', error);
-    return null;
-  }
-}
-
-// Función para realizar una operación de compra
-async function buyOrder(symbol, leverage, price) {
-  try {
-    const timestamp = Date.now();
-    const signature = generateSignature(
-      'POST',
-      '/fapi/v1/orders',
-      timestamp,
-      `symbol=${symbol}&side=BUY&type=MARKET&quantity=1&leverage=${leverage}&price=${price}`,
-    );
-
-    const response = await axios.post(
-      `${config.BINANCE_API_URL}orders`,
-      {
-        symbol,
-        side: 'BUY',
-        type: 'MARKET',
-        quantity: 1,
-        leverage,
-        price,
-      },
-      {
-        headers: {
-          'X-MBX-APIKEY': config.API_KEY,
-          'X-MBX-TIMESTAMP': timestamp,
-          'X-MBX-SIGNATURE': signature,
-        },
-      },
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error al realizar la operación de compra:', error);
-    return null;
-  }
-}
-
-// Función para realizar una operación de venta
-async function sellOrder(symbol, leverage, price) {
-  try {
-    const timestamp = Date.now();
-    const signature = generateSignature(
-      'POST',
-      '/fapi/v1/orders',
-      timestamp,
-      `symbol=${symbol}&side=SELL&type=MARKET&quantity=1&leverage=${leverage}&price=${price}`,
-    );
-
-    const response = await axios.post(
-      `${config.BINANCE_API_URL}orders`,
-      {
-        symbol,
-        side: 'SELL',
-        type: 'MARKET',
-        quantity: 1,
-        leverage,
-        price,
-      },
-      {
-        headers: {
-          'X-MBX-APIKEY': config.API_KEY,
-          'X-MBX-TIMESTAMP': timestamp,
-          'X-MBX-SIGNATURE': signature,
-        },
-      },
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error al realizar la operación de venta:', error);
-    return null;
-  }
-}
-
-// Función para generar la firma de la solicitud
-function generateSignature(method, path, timestamp, query) {
-  const signature = crypto
-    .createHmac('sha256', config.SECRET_KEY)
-    .update(`${method}\n${path}\n${timestamp}\n${query}`)
-    .digest('hex');
-  return signature;
-}
 
 module.exports = {
-  getFuturesCandlesticksData,
-  getFuturesTokens,
-  getFutureCandlesticks,
-  getCurrentPrice,
-  getSymbolInfo,
-  getWalletBalance,
-  buyOrder,
-  sellOrder,
+  getFuturesCandlesticksDataMiddleware,
+  getFuturesTokensMiddleware,
+  getFuturesTokenprMiddleware,
+  getFutureCandlesticksMiddleware,
+  getCurrentPriceMiddleware,
+  getSymbolInfoMiddleware,
+  getWalletBalanceMiddleware,
+  buyOrderMiddleware,
+  sellOrderMiddleware,
 };
 
