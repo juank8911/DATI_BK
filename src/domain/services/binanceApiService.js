@@ -16,7 +16,7 @@ async function getFuturesCandlesticksData() {
   try {
     const futuresTokens = await getFuturesTokens();
     const candlesticksData = [];
-    // console.log(futuresTokens);
+    console.log(futuresTokens);
     for (const token of futuresTokens) {
       const {symbol} = token;
       // console.log(symbol);
@@ -31,12 +31,12 @@ async function getFuturesCandlesticksData() {
     }
 
     // // Guardar el JSON en el archivo training.json
-    const filePath = './src/trinity_ai/datasets/training.json';
-    if (fs.existsSync(filePath)) {
-      // Si existe, borrar el archivo
-      fs.unlinkSync(filePath);
-      console.log('Archivo training.json existente borrado.');
-    }
+    const filePath = './src/trinity_ai/datasets/test.json';
+    // if (fs.existsSync(filePath)) {
+    //   // Si existe, borrar el archivo
+    //   fs.unlinkSync(filePath);
+    //   console.log('Archivo training.json existente borrado.');
+    // }
     fs.writeFileSync(filePath, JSON.stringify(candlesticksData, null, 2)); // Guardar con formato
 
     console.log('Datos de velas de tokens futuros guardados en:', filePath);
@@ -51,7 +51,7 @@ async function getFuturesCandlesticksData() {
 // Función para obtener la lista de tokens futuros
 async function getFuturesTokens() {
   try {
-    const response = await axios.get(`${config.BINANCE_API_URL}exchangeInfo`, {
+    const response = await axios.get(`${config.BINANCE_API_URL1}exchangeInfo`, {
       headers: {
         'X-MBX-APIKEY': config.API_KEY,
       },
@@ -67,7 +67,7 @@ async function getFuturesTokens() {
 async function getFutureCandlesticks(symbol, interval, limit) {
   try {
     const response = await axios.get(
-      `${config.BINANCE_API_URL}klines?symbol=${symbol}&interval=${interval}&limit=${limit}`,
+      `${config.BINANCE_API_URL1}klines?symbol=${symbol}&interval=${interval}&limit=${limit}`,
       {
         headers: {
           'X-MBX-APIKEY': config.API_KEY,
@@ -84,7 +84,7 @@ async function getFutureCandlesticks(symbol, interval, limit) {
 // Función para obtener el precio actual de un símbolo
 async function getCurrentPrice(symbol) {
   try {
-    const response = await axios.get(`${config.BINANCE_API_URL}ticker/price?symbol=${symbol}`, {
+    const response = await axios.get(`${config.BINANCE_API_URL1}ticker/price?symbol=${symbol}`, {
       headers: {
         'X-MBX-APIKEY': config.API_KEY,
       },
@@ -99,7 +99,7 @@ async function getCurrentPrice(symbol) {
 // Función para obtener la información de un símbolo
 async function getSymbolInfo(symbol) {
   try {
-    const response = await axios.get(`${config.BINANCE_API_URL}exchangeInfo`, {
+    const response = await axios.get(`${config.BINANCE_API_URL1}exchangeInfo`, {
       headers: {
         'X-MBX-APIKEY': config.API_KEY,
       },
@@ -117,7 +117,7 @@ async function getWalletBalance() {
     const timestamp = Date.now();
     const signature = generateSignature('GET', '/fapi/v1/account', timestamp, '');
 
-    const response = await axios.get(`${config.BINANCE_API_URL}account`, {
+    const response = await axios.get(`${config.BINANCE_API_URL1}account`, {
       headers: {
         'X-MBX-APIKEY': config.API_KEY,
         'X-MBX-TIMESTAMP': timestamp,
@@ -179,7 +179,7 @@ async function sellOrder(symbol, leverage, price) {
     );
 
     const response = await axios.post(
-      `${config.BINANCE_API_URL}orders`,
+      `${config.BINANCE_API_URL1}orders`,
       {
         symbol,
         side: 'SELL',
@@ -213,12 +213,16 @@ function generateSignature(method, path, timestamp, query) {
 
 
 async function getFuturesTokenpr() {
+
   const cmFuturesClient = new CMFutures('', '', {
     baseURL: config.BINANCE_API_URL
   });
 
   try {
-    return await cmFuturesClient.getExchangeInfo(); // Return the result
+     cmFuturesClient.getExchangeInfo()
+      .then((resp=>{console.log(resp)}))
+      .catch((err)=>{console.log(err)}) // Return the result
+
   } catch (err) {
     throw err; // Re-throw the error
   }

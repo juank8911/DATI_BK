@@ -99,7 +99,7 @@ async function sellOrderMiddleware(req, res, next) {
 async function getFuturesTokenprMiddleware(req, res, next) {
   try {
     const info = await BinanceApiService.getFuturesTokenpr();
-    // console.log(info.data);
+    console.log(info);
     res.json(info); // Send the info as JSON response
   } catch (err) {
     console.error(err);

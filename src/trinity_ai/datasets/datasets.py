@@ -1,6 +1,6 @@
 import json
 
-def load_test_data(file_path='test.json'):
+def load_test_data(file_path='./test.json'):
     """
     Carga los datos de prueba desde un archivo JSON.
 
@@ -24,7 +24,7 @@ def load_test_data(file_path='test.json'):
         print(f"Error: No se tiene permiso para leer el archivo '{file_path}'.")
         return None
 
-def load_training_data(file_path='training.json'):
+def load_training_data(file_path='./training.json'):
     """
     Carga los datos de entrenamiento desde un archivo JSON.
 

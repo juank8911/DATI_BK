@@ -2,12 +2,12 @@
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
-from datasets.datasets import load_test_data,load_training_data
+from .datasets.datasets import load_test_data,load_training_data
 # from datasets import datasets
 print('carga datasets')
-from models.tensorflowAiAdapter import load_model, save_model
+from .models.tensorflowAiAdapter import load_model, save_model
 print('carga models')
-from training.train import train_model, evaluate_model
+from .training.train import train_model, evaluate_model
 print('carga train')
 
 
@@ -20,8 +20,9 @@ def initialize_trinity_model():
     """
     # Cargar el modelo pre-entrenado si existe
     try:
-        print('inicia modelo')
+       
         model = load_model('./models')
+        print('inicia modelo')
         print("Modelo de IA de Trinity cargado correctamente.")
         # Evaluar el modelo cargado
         test_data = load_test_data()

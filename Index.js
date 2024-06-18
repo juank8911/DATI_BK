@@ -38,7 +38,7 @@ async function testBinanceConnection() {
       const res = {
         json: (data) => {
           console.log('Conexión exitosa con Binance. Lista de tokens futuros:');
-          console.log(data.data.symbols[0]);
+          console.log(data);
         },
         status: (code) => {
           return {
@@ -98,7 +98,7 @@ async function initializeAI() {
 
 // Inicia el servidor y prueba la conexión con Binance
 app.listen(port, async () => {
-    await initializeAI();
+    // await initializeAI();
     await testBinanceConnection();
     console.log(`La aplicación DATI está corriendo en http://localhost:${port}`);
 });
