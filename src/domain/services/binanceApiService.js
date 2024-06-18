@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const { Console } = require('console')
 const fs = require('fs'); // Importar el módulo fs para trabajar con archivos
 const config = require('../../config'); // Importar el archivo de configuración
-const { CMFutures, CMStream } = require("@binance/futures-connector");
+const { CMFutures, CMStream} = require("@binance/futures-connector");
 const logger = new Console({ stdout: process.stdout, stderr: process.stderr })
 
 // Función para obtener las velas de los tokens futuros y guardarlas en un archivo JSON
@@ -239,6 +239,18 @@ async function getAllMarcketTickets()
   setTimeout(() => websocketStreamClient.disconnect(), 6000)
 }
 
+async function getBalance()
+{
+  const cmFuturesClient = new CMFutures(config.API_KEY, config.SECRET_KEY, {
+    baseURL: config.BINANCE_API_URL
+  })
+  
+  cmFuturesClient
+    .getFuturesAccountBalance()
+    .then((response) => {console.log(response); return response.data})
+    .catch(console.error)
+}
+
 
 module.exports = {
   getFuturesCandlesticksData,
@@ -251,5 +263,6 @@ module.exports = {
   getWalletBalance,
   buyOrder,
   sellOrder,
+  getBalance,
 };
 

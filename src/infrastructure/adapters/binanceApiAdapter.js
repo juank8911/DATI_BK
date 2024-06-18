@@ -107,6 +107,17 @@ async function getFuturesTokenprMiddleware(req, res, next) {
   }
 }
 
+async function getBalanceMiddleware(req,res,nexy)
+{
+try{
+  const balance = await BinanceApiService.getBalance();
+  res.json(balance);
+}catch(error){
+    console.error('Error en el middleware:', error);
+    res.satatus(500).json({error:'Error no se pudo obtener el balance de la cuenta'})
+}
+}
+
 
 
 module.exports = {
@@ -118,6 +129,7 @@ module.exports = {
   getSymbolInfoMiddleware,
   getWalletBalanceMiddleware,
   buyOrderMiddleware,
+  getBalanceMiddleware,
   sellOrderMiddleware,
 };
 

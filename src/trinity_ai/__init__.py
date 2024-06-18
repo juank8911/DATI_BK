@@ -1,16 +1,16 @@
-from .models import trinityModel, tensorflowAiAdapter
-from .datasets import load_training_data, load_test_data
-from .training import train_model, evaluate_model
+# ./trinity_ai/__init__.py
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
-__all__ = [
-    'trinityModel',
-    'tensorflowAiAdapter',
-    'load_training_data',
-    'load_test_data',
-    'train_model',
-    'evaluate_model',
-    'initialize_trinity_model',
-]
+from datasets.datasets import load_test_data,load_training_data
+# from datasets import datasets
+print('carga datasets')
+from models.tensorflowAiAdapter import load_model, save_model
+print('carga models')
+from training.train import train_model, evaluate_model
+print('carga train')
+
+
 
 def initialize_trinity_model():
     """
@@ -20,8 +20,20 @@ def initialize_trinity_model():
     """
     # Cargar el modelo pre-entrenado si existe
     try:
-        model = tensorflowAiAdapter.load_model('./models')
+        print('inicia modelo')
+        model = load_model('./models')
         print("Modelo de IA de Trinity cargado correctamente.")
+        # Evaluar el modelo cargado
+        test_data = load_test_data()
+        accuracy = evaluate_model(model, test_data)
+        print(f"Precisión del modelo: {accuracy:.2f}%")
+        if accuracy < 0.8:  # Si la precisión es menor al 80%
+            print("Precisión del modelo inferior al 80%. Reentrenando...")
+            training_data = load_training_data()
+            model = train_model(training_data, test_data)
+            evaluate_model(model, test_data)
+            save_model(model, './models')
+            print("Modelo de IA de Trinity reentrenado y guardado correctamente.")        
         return model
     except FileNotFoundError:
         print("No se encontró un modelo pre-entrenado. Entrenando un nuevo modelo...")
@@ -31,6 +43,16 @@ def initialize_trinity_model():
     test_data = load_test_data()
     model = train_model(training_data, test_data)
     evaluate_model(model, test_data)
-    tensorflowAiAdapter.save_model(model, 'path/to/your/model')
+    save_model(model, './models')
     print("Modelo de IA de Trinity entrenado y guardado correctamente.")
     return model
+
+__all__ = [
+    'load_model',
+    'load_test_data',
+    'load_training_data',
+    'train_model',
+    'evaluate_model',
+    'save_model',
+    'initialize_trinity_model',
+]

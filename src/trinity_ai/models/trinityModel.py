@@ -1,3 +1,5 @@
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import tensorflow as tf
 
 # Función para inicializar el modelo Trinity con las capas y activaciones especificadas
