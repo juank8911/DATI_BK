@@ -8,19 +8,20 @@ const { Console } = require('console')
 const fs = require('fs'); // Importar el módulo fs para trabajar con archivos
 const config = require('../../config'); // Importar el archivo de configuración
 const { CMFutures, CMStream} = require("@binance/futures-connector");
+const { Spot } = require('@binance/connector')
 const logger = new Console({ stdout: process.stdout, stderr: process.stderr })
 
 // Función para obtener las velas de los tokens futuros y guardarlas en un archivo JSON
 async function getFuturesCandlesticksData() {
   let i = 0;
   try {
-    const futuresTokens = await getFuturesTokens();
-    const candlesticksData = [];
-    // console.log(futuresTokens);
-    for (const token of futuresTokens) {
-      const {symbol} = token;
-      // console.log(symbol);
-      const candlesticks = await getFutureCandlesticks(symbol, '1m', 180); // 30 segundos, 3 horas atrás (120 velas)
+     futuresTokens = await getFuturesTokenpr();
+    candlesticksData = [];
+    console.log(futuresTokensnode);
+    futuresTokens = futuresTokens.data
+    for (let token of futuresTokens) {
+      let {symbol} = token;
+      let candlesticks = await getFutureCandlesticks(symbol, '1m', 240,'2024-06-18T18:00:00','2024-06-18T22:00:00'); // 30 segundos, 3 horas atrás (120 velas)
       // console.log(candlesticks)
       candlesticksData.push({
         nombre: symbol,
@@ -31,7 +32,7 @@ async function getFuturesCandlesticksData() {
     }
 
     // // Guardar el JSON en el archivo training.json
-    const filePath = './src/trinity_ai/datasets/test.json';
+    const filePath = './src/trinity_ai/datasets/training1.json';
     // if (fs.existsSync(filePath)) {
     //   // Si existe, borrar el archivo
     //   fs.unlinkSync(filePath);
@@ -51,7 +52,7 @@ async function getFuturesCandlesticksData() {
 // Función para obtener la lista de tokens futuros
 async function getFuturesTokens() {
   try {
-    const response = await axios.get(`${config.BINANCE_API_URL}exchangeInfo`, {
+    const response = await axios.get(`${config.BINANCE_API_URL1}exchangeInfo`, {
       headers: {
         'X-MBX-APIKEY': config.API_KEY,
       },
@@ -64,21 +65,28 @@ async function getFuturesTokens() {
 }
 
 // Función para obtener datos históricos de velas de un token futuro
-async function getFutureCandlesticks(symbol, interval, limit) {
+async function getFutureCandlesticks(symbol, interval, limit,Fstart,Fend) {
   try {
+    Sdate = await dateToEpochMilliseconds(Fstart)
+    Fdate = await dateToEpochMilliseconds(Fend)
+    // console.log(config.BINANCE_API_URL1)
+
     const response = await axios.get(
-      `${config.BINANCE_API_URL}klines?symbol=${symbol}&interval=${interval}&limit=${limit}`,
-      {
-        headers: {
-          'X-MBX-APIKEY': config.API_KEY,
-        },
-      },
+      `${config.BINANCE_API_URL1}klines?symbol=${symbol}&interval=${interval}&startTime=${Sdate}&endTime=${Fdate}&timeZone=-5&limit=${limit}`,
     );
-    return response.data;
+    return response
   } catch (error) {
-    console.error('Error al obtener datos históricos de velas del token futuro:', error);
-    return null;
+    throw('Error al obtener datos históricos de velas del token futuro:', error);
+    // return null;
   }
+}
+
+async function dateToEpochMilliseconds(dateString) {
+  // 1. Create a Date object from the input string
+  const date = new Date(dateString);
+
+  // 2. Get the number of milliseconds since the Unix epoch
+  return date.getTime();
 }
 
 // Función para obtener el precio actual de un símbolo
@@ -251,6 +259,25 @@ async function getBalance()
     .catch(console.error)
 }
 
+async function getAccountStatus()
+{
+const apiKey = config.API_KEY
+const apiSecret = config.API_KEY
+const client = new Spot(apiKey, apiSecret)
+
+client.accountStatus()
+  .then(response => {client.logger.log(response.data); return response})
+  .catch(error => client.logger.error(error))
+}
+
+
+  
+  // cmFuturesClient
+  //   .getMarkPriceKlines('BTCUSD_PERP', '1m')
+  //   .then((response) => console.log(response))
+  //   .catch(console.error)
+
+
 
 module.exports = {
   getFuturesCandlesticksData,
@@ -260,6 +287,7 @@ module.exports = {
   getCurrentPrice,
   getAllMarcketTickets,
   getSymbolInfo,
+  getAccountStatus,
   getWalletBalance,
   buyOrder,
   sellOrder,

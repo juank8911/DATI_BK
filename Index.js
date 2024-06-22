@@ -4,7 +4,8 @@
 const express = require('express');
 const bodyParser = require('body-parser')
 const { spawn } = require('child_process');
-const { getFuturesTokenprMiddleware, getFuturesCandlesticksDataMiddleware } = require('./src/infrastructure/adapters/binanceApiAdapter');
+const { getFuturesTokenprMiddleware, getFuturesCandlesticksDataMiddleware, getStatusAccountMiddlewere } = require('./src/infrastructure/adapters/binanceApiAdapter');
+const { getExchangeMiddleware, getCandelsUMFutMiddleware} = require('./src/infrastructure/adapters/binanceApiFutAdapter');
 //importar TensorFlow para node     
 // Crea una instancia de Express
 const app = express();  
@@ -12,10 +13,13 @@ const port = 3000;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 // Ruta de prueba
+
+
 app.get('/', (req, res) => {
 
   res.send('¡Bienvenido a la aplicación DATI!'); 
 });
+
 
 app.get('/trainData', async (req, res) => {
     try {
@@ -25,10 +29,39 @@ app.get('/trainData', async (req, res) => {
       // Responde al cliente con un mensaje de éxito
       res.json({ message: 'Datos de entrenamiento creados correctamente.' });
     } catch (error) {
-      console.error('Error al crear datos de entrenamiento:', error);
-      res.status(500).json({ error: 'Error al crear datos de entrenamiento.' });
+      // console.error('Error al crear datos de entrenamiento:', error);
+      res.status(500).send({ error });
     }
   });
+
+
+ // index route
+// index.js
+// index route
+app.get('/fexchange', async (req, res) => {
+  try {
+    req.body = req.body || [];
+    let datas = await getExchangeMiddleware(req, res, () => {}); // Await the promise
+   
+      req.body = await datas.exchangeInfo
+      // console.log(req.body);
+      // console.log(await req);
+    let velas = await getCandelsUMFutMiddleware(req,res,()=>{})
+    //   let candles = await getCandelsUMFut(await req,res,()=>{})
+    console.log(await velas);
+      console.log("fin velas")
+    // // Send the response
+     res.status(200).json(await velas)
+  } catch (error) {
+    console.error('Error in /fexchange route:', error);
+    res.status(500).send({ message: 'Internal Server Error' });
+  }
+});
+
+  // app.get('/acc',async (req,res)=>{
+  //     await getStatusAccountMiddlewere(req,res,()=>{});
+      
+  // })
 
 // Función para probar la conexión con Binance al iniciar la aplicación
 async function testBinanceConnection() {
@@ -38,7 +71,7 @@ async function testBinanceConnection() {
       const res = {
         json: (data) => {
           console.log('Conexión exitosa con Binance. Lista de tokens futuros:');
-          console.log(data.data.symbols[0]);
+          // console.log(data.data.symbols[0]);
         },
         status: (code) => {
           return {
@@ -99,6 +132,6 @@ async function initializeAI() {
 // Inicia el servidor y prueba la conexión con Binance
 app.listen(port, async () => {
     // await initializeAI();
-    await testBinanceConnection();
+    // await testBinanceConnection();
     console.log(`La aplicación DATI está corriendo en http://localhost:${port}`);
 });

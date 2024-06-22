@@ -21,33 +21,38 @@ def initialize_trinity_model():
     # Cargar el modelo pre-entrenado si existe
     try:
        
-        model = load_model('./models')
-        print('inicia modelo')
-        print("Modelo de IA de Trinity cargado correctamente.")
-        # Evaluar el modelo cargado
-        test_data = load_test_data()
-        accuracy = evaluate_model(model, test_data)
-        print(f"Precisión del modelo: {accuracy:.2f}%")
-        if accuracy < 0.8:  # Si la precisión es menor al 80%
-            print("Precisión del modelo inferior al 80%. Reentrenando...")
+        model = load_model('./models/')
+        print(model)
+        if model != None:
+            print('inicia modelo')
+            print("Modelo de IA de Trinity cargado correctamente.")
+            # Evaluar el modelo cargado
+            test_data = load_test_data()
+            accuracy = evaluate_model(model, test_data)
+            print(f"Precisión del modelo: {accuracy:.2f}%")
+            if accuracy < 0.8:  # Si la precisión es menor al 80%
+                print("Precisión del modelo inferior al 80%. Reentrenando...")
+                training_data = load_training_data()
+                model = train_model(training_data, test_data)
+                evaluate_model(model, test_data)
+                save_model(model, './models')
+                print("Modelo de IA de Trinity reentrenado y guardado correctamente.")
+        else:
+        # except FileNotFoundError:
+            print("No se encontró un modelo pre-entrenado. Entrenando un nuevo modelo...")
+
+            # Entrenar un nuevo modelo si no existe
             training_data = load_training_data()
+            test_data = load_test_data()
             model = train_model(training_data, test_data)
             evaluate_model(model, test_data)
             save_model(model, './models')
-            print("Modelo de IA de Trinity reentrenado y guardado correctamente.")        
+            print("Modelo de IA de Trinity entrenado y guardado correctamente.")
         return model
     except FileNotFoundError:
-        print("No se encontró un modelo pre-entrenado. Entrenando un nuevo modelo...")
-
-    # Entrenar un nuevo modelo si no existe
-    training_data = load_training_data()
-    test_data = load_test_data()
-    model = train_model(training_data, test_data)
-    evaluate_model(model, test_data)
-    save_model(model, './models')
-    print("Modelo de IA de Trinity entrenado y guardado correctamente.")
-    return model
-
+        print("Error: ",FileNotFoundError)
+        
+        
 __all__ = [
     'load_model',
     'load_test_data',

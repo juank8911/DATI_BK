@@ -65,7 +65,7 @@ def evaluate_model(model, test_data):
     print(f"Pérdida: {loss}, Precisión: {accuracy}")
 
     # Mostrar resultados de la evaluación
-    # plot_evaluation_results(loss, accuracy)
+    Plot_evaluation_results(loss, accuracy)
 
 def find_volatile_symbols(training_data, volatility_threshold=0.05):
     # """

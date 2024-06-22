@@ -7,9 +7,11 @@ async function getFuturesCandlesticksDataMiddleware(req, res, next) {
   try {
     const candlesticksData = await BinanceApiService.getFuturesCandlesticksData();
     res.json(candlesticksData);
+    
   } catch (error) {
-    console.error('Error en el middleware:', error);
-    res.status(500).json({ error: 'Error al obtener datos de velas' });
+    throw(error)
+    // console.error('Error en el middleware:', error);
+    // res.status(500).send({ error});
   }
 }
 
@@ -107,7 +109,7 @@ async function getFuturesTokenprMiddleware(req, res, next) {
   }
 }
 
-async function getBalanceMiddleware(req,res,nexy)
+async function getBalanceMiddleware(req,res,next)
 {
 try{
   const balance = await BinanceApiService.getBalance();
@@ -116,6 +118,18 @@ try{
     console.error('Error en el middleware:', error);
     res.satatus(500).json({error:'Error no se pudo obtener el balance de la cuenta'})
 }
+}
+
+async function getStatusAccountMiddlewere(req,res,next)
+{
+  try{
+    const account = await BinanceApiService.getAccountStatus();
+    console.log(account)
+    res.json(account)
+  }
+  catch(error){
+    console.error('Error en el middleware:', error);
+  }
 }
 
 
@@ -127,6 +141,7 @@ module.exports = {
   getFutureCandlesticksMiddleware,
   getCurrentPriceMiddleware,
   getSymbolInfoMiddleware,
+  getStatusAccountMiddlewere,
   getWalletBalanceMiddleware,
   buyOrderMiddleware,
   getBalanceMiddleware,
