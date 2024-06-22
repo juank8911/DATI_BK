@@ -4,15 +4,24 @@
 const express = require('express');
 const bodyParser = require('body-parser')
 const { spawn } = require('child_process');
+const ws = require('express-ws'); // Import ws library
 const { getFuturesTokenprMiddleware, getFuturesCandlesticksDataMiddleware, getStatusAccountMiddlewere } = require('./src/infrastructure/adapters/binanceApiAdapter');
-const { getExchangeMiddleware, getCandelsUMFutMiddleware} = require('./src/infrastructure/adapters/binanceApiFutAdapter');
-//importar TensorFlow para node     
+const { getExchangeMiddleware, getCandelsUMFutMiddleware,testConectionMiddleware} = require('./src/infrastructure/adapters/binanceApiFutAdapter');
+//importar TensorFlow para node   
+
+const fs = require('fs');  
 // Crea una instancia de Express
 const app = express();  
 const port = 3000;
+ws(app);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
-// Ruta de prueba
+
+
+
+
+// Connect and subscribe on route access
+// app.ws('/ws', connectAndSubscribe);
 
 
 app.get('/', (req, res) => {
@@ -20,6 +29,20 @@ app.get('/', (req, res) => {
   res.send('¡Bienvenido a la aplicación DATI!'); 
 });
 
+// app.ws('/ws/socket', (ws, req) => {
+//   ws.on('connect', () => {
+//     console.log('Cliente conectado');
+//   });
+
+//   ws.on('disconnect', () => {
+//     console.log('Cliente desconectado');
+//   });
+
+//   ws.on('message', (message) => {
+//     console.log('Mensaje recibido:', message);
+//     ws.send('Mensaje de respuesta desde el servidor');
+//   });
+// });
 
 app.get('/trainData', async (req, res) => {
     try {
@@ -49,6 +72,12 @@ app.get('/fexchange', async (req, res) => {
     let velas = await getCandelsUMFutMiddleware(req,res,()=>{})
     //   let candles = await getCandelsUMFut(await req,res,()=>{})
     console.log(await velas);
+    const dataFutFilePath = 'src\\trinity_ai\\datasets\\dataFut.json';
+
+    // Overwrite the file with the new candles data
+    fs.writeFileSync(dataFutFilePath, JSON.stringify(await velas), 'utf8');
+  
+    console.log('dataFut.json file created successfully!');
       console.log("fin velas")
     // // Send the response
      res.status(200).json(await velas)
@@ -64,33 +93,19 @@ app.get('/fexchange', async (req, res) => {
   // })
 
 // Función para probar la conexión con Binance al iniciar la aplicación
-async function testBinanceConnection() {
-    try {
-      // Create a mock request and response object
-      const req = {}; // Empty object for the request
-      const res = {
-        json: (data) => {
-          console.log('Conexión exitosa con Binance. Lista de tokens futuros:');
-          // console.log(data.data.symbols[0]);
-        },
-        status: (code) => {
-          return {
-            json: (error) => {
-              console.error('Error al probar la conexión con Binance:', error);
-              process.exit(1); // Cierra la aplicación con código de error
-            }
-          };
-        }
-      };
-      const next = () => {}; // Empty function for next
-  
-      // Call the middleware function
-      await getFuturesTokenprMiddleware(req, res, next);
-    } catch (error) {
-      console.error('Error al probar la conexión con Binance:', error);
-      process.exit(1); // Cierra la aplicación con código de error
-    }
+
+
+
+async function testConection() {
+  try {
+    let conn = await testConectionMiddleware(); // Pass 'req' and 'res' to the middleware
+   console.log('conexion a api correcta');
+  } catch (error) {
+    console.error(error); // Handle any errors from the middleware or service
+    process.exit(1)
   }
+}
+
 
   // Función para inicializar la AI de Python
 async function initializeAI() {
@@ -129,9 +144,14 @@ async function initializeAI() {
     }
   }
 
+
+// Register the WebSocket connection middleware
+// app.ws('/ws', webSocketConnection(wsServer));
+
 // Inicia el servidor y prueba la conexión con Binance
 app.listen(port, async () => {
     // await initializeAI();
-    // await testBinanceConnection();
+    await testConection();
     console.log(`La aplicación DATI está corriendo en http://localhost:${port}`);
+    console.log(`el Socket DATI está corriendo en http://localhost:8080`);
 });

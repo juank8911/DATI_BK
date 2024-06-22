@@ -2,7 +2,7 @@
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
-from .datasets.datasets import load_test_data,load_training_data
+from .datasets.datasets import load_test_data,load_training_data,create_TFRecords
 # from datasets import datasets
 print('carga datasets')
 from .models.tensorflowAiAdapter import load_model, save_model
@@ -12,15 +12,16 @@ print('carga train')
 
 
 
-def initialize_trinity_model():
+async def initialize_trinity_model():
     """
     Inicializa el modelo de IA de Trinity.
 
     Esta función carga el modelo pre-entrenado o entrena un nuevo modelo si no existe.
     """
+    
     # Cargar el modelo pre-entrenado si existe
     try:
-       
+        await create_TFRecords()
         model = load_model('./models/')
         print(model)
         if model != None:

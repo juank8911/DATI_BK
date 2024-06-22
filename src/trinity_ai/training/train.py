@@ -1,6 +1,7 @@
 import json as json
 import pandas as pd
 import yfinance as yf
+import tensorflow.keras.models as load_model
 # from ..models.tensorflowAiAdapter import 
 # from ..models import tensorflowAiAdapter
 # from ..datasets import datasets
@@ -28,27 +29,31 @@ def train_model(training_data, test_data):
     #     tensorflow.keras.Model: El modelo de IA entrenado.
     # """
 
-    # # 1. Obtener el saldo de la billetera
-    # balance = get_wallet_balance()
+    # # 1. recorrer los datos de el archivo tranin_data, obtener los que tienen el valor
+    # logro mas alto, la media, promedio, ema, sma para obtener los tokens con mayor fluctuacion
+    
 
-    # # 2. Cargar los datos de entrenamiento
-    # training_data = datasets.load_training_data()
+    # # 2. una vez tiene los datos de los tokens mas prometedores, solicitar los datos por soket 
+    # las klines de los tokens seleccionados.
+    
 
-    # # 3. Buscar los símbolos con mayor fluctuación de precios
-    # volatile_symbols = find_volatile_symbols(training_data)
+    # # 3. Buscar los token que generen mas de 0.5% cada nueva vela puede ser en largo o en corto 
+    #(de subida o bajada del precio ) segun los datos del archivo y el valor actual 
 
-    # # 4. Filtrar los datos de entrenamiento para incluir solo los símbolos volátiles
-    # filtered_training_data = [symbol for symbol in training_data if symbol['symbol'] in volatile_symbols]
+
+    # # 4. buscar las mejores oportunidades para comprar en largo o vender en corto para obtener el mayor
+    # porcentaje de ganancia posible que debe ser minimo 0.5% por minuto 
+    
 
     # # 5. Pronosticar el movimiento de precios
     # predictions = predict_price_movement(model, training_data)
 
     # # 6. Simular operaciones de trading
-    # backtest_results = simulate_trading(predictions, training_data)
+    backtest_results = simulate_trading(predictions, training_data)
 
     # # 7. Entrenar el modelo de IA
-    # model = tensorflowAiAdapter.create_model()
-    # model.fit(filtered_training_data, epochs=10)  # Ajustar los parámetros de entrenamiento según sea necesario
+    model = tensorflowAiAdapter.create_model()
+    model.fit(filtered_training_data, epochs=10)  # Ajustar los parámetros de entrenamiento según sea necesario
 
     return null
 
@@ -67,27 +72,47 @@ def evaluate_model(model, test_data):
     # Mostrar resultados de la evaluación
     Plot_evaluation_results(loss, accuracy)
 
-def find_volatile_symbols(training_data, volatility_threshold=0.05):
-    # """
-    # Busca los símbolos con mayor fluctuación de precios en los datos de entrenamiento.
+def train_model(training_data, test_data):
+    """
+    Entrena un modelo de IA para predecir el movimiento de precios de criptomonedas.
 
-    # Args:
-    #     training_data (list): Lista de diccionarios con datos de entrenamiento.
-    #     volatility_threshold (float): El umbral de volatilidad para considerar un símbolo como volátil.
+    Args:
+        training_data (list): Lista de diccionarios con datos de entrenamiento.
+        test_data (list): Lista de diccionarios con datos de prueba.
 
-    # Returns:
-    #     list: Una lista de símbolos volátiles.
-    # """
-    # volatile_symbols = []
-    # for symbol in training_data:
-    #     # Calcula la volatilidad del símbolo usando una medida como la desviación estándar
-    #     # Ejemplo:
-    #     close_prices = [candle['close'] for candle in symbol['candles']]
-    #     #volatility = talib.STDDEV(close_prices, timeperiod=14)  # Ajusta el período según sea necesario
-    #     volatility = calculate_volatility(symbol['symbol'], period="1y", timeperiod=14)
-    #     if volatility > volatility_threshold:
-    #         volatile_symbols.append(symbol['symbol'])
-    return null
+    Returns:
+        tensorflow.keras.Model: El modelo de IA entrenado.
+    """
+
+    # 1. Identificar tokens volátiles
+    volatile_symbols = find_volatile_symbols(training_data)
+
+    # 2. Obtener datos de klines para tokens volátiles
+    klines_data = get_klines_data(volatile_symbols)
+
+    # 3. Filtrar tokens con oportunidades de trading
+    filtered_training_data = filter_trading_opportunities(klines_data)
+
+    # 4. Buscar oportunidades de compra en largo o venta en corto
+    trading_opportunities = find_trading_opportunities(filtered_training_data)
+
+    # 5. Pronosticar el movimiento de precios
+    predictions = predict_price_movement(model, filtered_training_data)
+
+    # 6. Simular operaciones de trading
+    backtest_results = simulate_trading(predictions, filtered_training_data)
+
+    # 7. Entrenar el modelo de IA
+    model = tensorflowAiAdapter.create_model()
+    model.fit(filtered_training_data, epochs=10)  # Ajustar los parámetros de entrenamiento según sea necesario
+
+    return model
+
+def find_volatile_symbols(training_data):
+    print(training_data)
+ # 1. 
+    
+
 
 def calculate_volatility(ticker, period="1y", timeperiod=14):
     """

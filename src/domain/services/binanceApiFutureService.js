@@ -2,9 +2,11 @@ const crypto = require('crypto');
 const { Console } = require('console')
 const fs = require('fs'); // Importar el módulo fs para trabajar con archivos
 const config = require('../../config'); // Importar el archivo de configuración
-const { CMFutures, CMStream, UMFutures} = require("@binance/futures-connector");
+const { CMFutures, UMFutures} = require("@binance/futures-connector");
+const { UMStream } = require('@binance/futures-connector'); 
+
 const { Spot } = require('@binance/connector')
-const logger = new Console({ stdout: process.stdout, stderr: process.stderr })
+
 
 
 const cmFuturesClient = new CMFutures("","", {
@@ -14,6 +16,25 @@ const cmFuturesClient = new CMFutures("","", {
 const UMFuturesClient = new UMFutures("","",{
     baseURL: config.BINAFM_API_URL
 })
+
+
+
+
+
+
+
+/**
+ * Asynchronous function to ping the UMFuturesClient.
+ * @async
+ * @function testConectionServ
+ * @returns {Promise} A promise that resolves with the ping response.
+ */
+async function testConectionServ() {
+  return await UMFuturesClient.ping();
+}
+
+// main function (Index.js)
+
 
 
 
@@ -105,7 +126,7 @@ async function getCandles(datas) {
         // Agregar indicadores a la vela modificada
         console.log(tamaño, '- ',j, '/',tamñoDat,'-',i)
         j++
-        return [...vela, porcambio, EMA3, porcentajeFluctuacion3h, SMA3_vela];
+        return [...vela];
       });
   
       let promed = sumaPo / tamaño;
@@ -136,6 +157,7 @@ module.exports =
 {
     getExchangeInfo,
     getCandles,
+    testConectionServ,
 }
 
 

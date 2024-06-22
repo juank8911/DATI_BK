@@ -1,6 +1,11 @@
 const { iterateSync } = require('glob');
 const binanceApiFutureService = require('../../domain/services/binanceApiFutureService');
+
 const fs = require('fs'); 
+const { Console } = require('console')
+const logger = new Console({ stdout: process.stdout, stderr: process.stderr })
+const { UMStream } = require('@binance/futures-connector');
+
 
 
 
@@ -45,6 +50,24 @@ async function getExchangeMiddleware(req, res, next) {
   }
 }
 
+/**
+ * Asynchronous middleware function to test the connection status and send the result as JSON.
+ * @async
+ * @function testConectionMiddleware
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next function in the middleware chain.
+ */
+async function testConectionMiddleware() {
+  try {
+    let conn = await binanceApiFutureService.testConectionServ();
+    return await conn
+}catch(err)
+{throw err}
+}
+
+
+
 
 async function getCandelsUMFutMiddleware(req,res,next)
 {
@@ -54,14 +77,12 @@ async function getCandelsUMFutMiddleware(req,res,next)
   // console.log(datas)
   // console.log("datas")
 const candles = await binanceApiFutureService.getCandles(await datas)
+// for(let candel of await candles ){
+//   // console.log(candel)
+// }
 //  console.log(await candles)
   // Path to the JSON file
-  const dataFutFilePath = 'src\\trinity_ai\\models\\dataFut.json';
-
-  // Overwrite the file with the new candles data
-  fs.writeFileSync(dataFutFilePath, JSON.stringify(await candles), 'utf8');
-
-  console.log('dataFut.json file created successfully!');
+ 
 
 return candles
 
@@ -70,4 +91,5 @@ return candles
 module.exports = {
 getExchangeMiddleware,
 getCandelsUMFutMiddleware,
+testConectionMiddleware,
 }
