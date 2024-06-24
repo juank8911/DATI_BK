@@ -28,7 +28,7 @@ async def initialize_trinity_model():
             print('inicia modelo')
             print("Modelo de IA de Trinity cargado correctamente.")
             # Evaluar el modelo cargado
-            test_data = load_test_data()
+            test_data = load_test_data('J:\ProyectosCriptoMon\DATI\src\trinity_ai\datasets\dataFut.json')
             accuracy = evaluate_model(model, test_data)
             print(f"Precisión del modelo: {accuracy:.2f}%")
             if accuracy < 0.8:  # Si la precisión es menor al 80%
@@ -43,9 +43,10 @@ async def initialize_trinity_model():
             print("No se encontró un modelo pre-entrenado. Entrenando un nuevo modelo...")
 
             # Entrenar un nuevo modelo si no existe
-            training_data = load_training_data()
-            test_data = load_test_data()
+            training_data = load_training_data('J:\ProyectosCriptoMon\DATI\src\\trinity_ai\datasets\dataFut.json')
+            test_data = load_test_data('J:\ProyectosCriptoMon\DATI\src\\trinity_ai\datasets\dataFut.json')
             model = train_model(training_data, test_data)
+            print('evaluate')
             evaluate_model(model, test_data)
             save_model(model, './models')
             print("Modelo de IA de Trinity entrenado y guardado correctamente.")

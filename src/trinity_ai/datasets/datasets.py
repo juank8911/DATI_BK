@@ -1,113 +1,124 @@
 import json
+import os
 import tensorflow as tf
+# file_path = 'J:\ProyectosCriptoMon\DATI\src\trinity_ai\datasets\dataFut.json'
 
-
-def load_test_data(file_path='test.json'):
+def load_test_data(file_path):
     """
-    Carga los datos de prueba desde un archivo JSON.
+    Convierte datos JSON al formato TensorFlow para entrenamiento de modelos.
 
     Args:
-        file_path (str): La ruta al archivo JSON.
+        file_path (str, optional): Ruta al archivo JSON que contiene los datos. Defaults to '/dataFut.json'.
 
     Returns:
-        list: Una lista de diccionarios, donde cada diccionario representa un ejemplo de prueba.
+         list: Lista de diccionarios, donde cada diccionario representa un ejemplo de entrenamiento.
     """
+    # sourcery skip: return-or-yield-outside-function
     try:
-        with open(file_path, 'r') as f:
-            test_data = json.load(f)
-        return test_data
-    except FileNotFoundError:
-        print(f"Error: El archivo '{file_path}' no se encontró.")
-        return None
-    except json.JSONDecodeError:
-        print(f"Error: El archivo '{file_path}' contiene datos JSON inválidos.")
-        return None
-    except PermissionError:
-        print(f"Error: No se tiene permiso para leer el archivo '{file_path}'.")
-        return None
+        # Check if the file exists at the specified path
+        if not os.path.isfile(file_path):
+         raise FileNotFoundError(f"File not found: {file_path}")
+        #  print(file_path)
+        # Cargar datos JSON
+        with open(file_path) as f:
+            # print(f)
+            datas = json.load(f)
 
-def load_training_data(file_path='.\training.tfrecord'):
-    """
-    Carga los datos de entrenamiento desde un archivo TFRecord.
+        # Convertir datos a formato TensorFlow
+        tf_data = []
+        # data = data[1]
+        
+        for symbol_data in datas:
+            symbol_dict = symbol_data['symbol']
+            print(symbol_dict)
+            name = symbol_dict['name']
+            data_klines =  symbol_dict['data'][0]  # Extraer la primera lista de data_klines (asumiendo 180 elementos)
 
-    Args:
-        file_path (str): La ruta al archivo TFRecord.
+        #     # Convertir data_klines (lista) a tensor de TensorFlow
+            data_tensor = tf.convert_to_tensor(data_klines, dtype=tf.float32)
 
-    Returns:
-        list: Una lista de diccionarios, donde cada diccionario representa un ejemplo de entrenamiento.
-    """
-    try:
-        # Crea un dataset de TFRecord
-        dataset = tf.data.TFRecordDataset(file_path)
-
-        # Define las características del dataset
-        feature_description = {
-            'name': tf.io.FixedLenFeature([], tf.string),
-            'data': tf.io.FixedLenFeature([8], tf.float32),
-            'promedio': tf.io.FixedLenFeature([], tf.string),
-            'logro': tf.io.FixedLenFeature([], tf.int64),
-            'ema': tf.io.FixedLenFeature([], tf.float32),
-            'pft': tf.io.FixedLenFeature([], tf.float32),
-            'SMA': tf.io.FixedLenFeature([], tf.float32),
-        }
-
-        # Define una función para parsear los ejemplos del dataset
-        def _parse_function(example_proto):
-            # Parse the input tf.train.Example proto
-            example = tf.io.parse_single_example(example_proto, feature_description)
-
-            # Decode the features
-            name = tf.io.decode_raw(example['name'], tf.string)
-            data = example['data']
-            promedio = tf.io.decode_raw(example['promedio'], tf.string)
-            logro = example['logro']
-            ema = example['ema']
-            pft = example['pft']
-            SMA = example['SMA']
-
-            # Convert the features to a dictionary
-            features = {
-                'symbol': symbol.numpy().decode('utf-8'),
-                'data': data.numpy(),
-                'promedio': promedio.numpy().decode('utf-8'),
-                'logro': logro.numpy(),
-                'ema': ema.numpy(),
-                'pft': pft.numpy(),
-                'SMA': SMA.numpy(),
+        #     # Crear un diccionario con los datos en formato TensorFlow
+            tf_symbol = {
+                'name': tf.convert_to_tensor(name, dtype=tf.string),
+                'data': data_tensor,
+                'promedio': tf.convert_to_tensor(symbol['promedio'], dtype=tf.string),
+                'logro': tf.convert_to_tensor(symbol['logro'], dtype=tf.int64),
+                'ema': tf.convert_to_tensor(symbol['ema'], dtype=tf.float32),
+                'pft': tf.convert_to_tensor(symbol['pft'], dtype=tf.float32),
+                'SMA': tf.convert_to_tensor(symbol['SMA'], dtype=tf.float32),
             }
 
-            return features
+        #     # Agregar el diccionario a la lista de datos TensorFlow
+        tf_data.append(tf_symbol)
+        return tf_data
+    
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        return None  # Indicate file not found  
 
-        # Aplica la función de parseo al dataset
-        parsed_dataset = dataset.map(_parse_function)
 
-        # Convierte el dataset a una lista de diccionarios
-        training_data = list(parsed_dataset.as_numpy_iterator())
+import json
+import tensorflow as tf
+import os  # Import for file path handling
 
-        return training_data
+def load_training_data(file_path='/dataFut.json'):
+  """
+  Convierte datos JSON al formato TensorFlow para entrenamiento de modelos.
 
-    except FileNotFoundError:
-        print(f"Error: El archivo '{file_path}' no se encontró.")
-        return None
-    except tf.errors.InvalidArgumentError:
-        print(f"Error: El archivo '{file_path}' no es un archivo TFRecord válido.")
-        return None
-    except PermissionError:
-        print(f"Error: No se tiene permiso para leer el archivo '{file_path}'.")
-        return None
+  Args:
+      file_path (str, optional): Ruta al archivo JSON que contiene los datos. Defaults to '/dataFut.json'.
 
-def create_tfrecords():
-    """
-    Genera un archivo TFRecord a partir de un archivo JSON.
+  Returns:
+      list: Lista de diccionarios, donde cada diccionario representa un ejemplo de entrenamiento en formato TensorFlow,
+          o None si el archivo no se encuentra.
+  """
 
-    Args:
-        json_file (str): La ruta al archivo JSON.
-        tfrecord_file (str): La ruta al archivo TFRecord de salida.
-    """
-    with open('training.json', 'r') as f:
-     data = json.load(f)
-     
-     
+  try:
+    # Check if the file exists at the specified path
+    if not os.path.isfile(file_path):
+      raise FileNotFoundError(f"File not found: {file_path}")
+
+    # Open the file and load JSON data
+    with open(file_path) as f:
+      datas = json.load(f)
+
+    # Process each symbol's data
+    tf_data = []
+    for symbol_data in datas:
+      symbol_dict = symbol_data['symbol']
+
+      # Extract necessary information
+      name = symbol_dict['name']
+      data_klines = symbol_dict['data'][0]  # Assuming the first list contains kline data
+
+      # Separate and convert data_klines (assuming specific structure)
+      timestamps = tf.convert_to_tensor([int(x) for x in data_klines[::7]], dtype=tf.int64)  # Extract timestamps
+      numeric_values = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0'
+
+      # Create a dictionary with TensorFlow tensors
+      tf_symbol = {
+          'name': tf.convert_to_tensor(name, dtype=tf.string),
+          'data': tf.stack([timestamps, numeric_values]),  # Stack timestamps and numeric values (assuming consistent structure)
+          'promedio': tf.convert_to_tensor(symbol_dict['promedio'], dtype=tf.string),
+          'logro': tf.convert_to_tensor(symbol_dict['logro'], dtype=tf.int64),
+          'ema': tf.convert_to_tensor(symbol_dict['ema'], dtype=tf.float32),
+          'pft': tf.convert_to_tensor(symbol_dict['pft'], dtype=tf.float32),
+          'SMA': tf.convert_to_tensor(symbol_dict['SMA'], dtype=tf.float32),
+      }
+
+      # Add the dictionary to the training data list
+      tf_data.append(tf_symbol)
+
+    return tf_data
+
+  except FileNotFoundError as e:
+    print(f"Error: {e}")
+    return None  # Indicate file not found
+
+
+
+
+
 async def create_TFRecords():
   """Converts dataFut.json to TFRecords and saves it to src\trinity_ai\datasets."""
 
@@ -125,12 +136,12 @@ async def create_TFRecords():
   with tf.io.TFRecordWriter(tfrecords_file_path) as writer:
     for symbol_data in data:
       symbol = symbol_data['symbol']
-      candles = symbol_data['data']
+      candles = symbol_data['symbol']['data']
 
       for candle in candles:
         # Convert candle data to features
         features = {
-          'symbol': tf.train.Feature(bytes_list=tf.train.BytesList(value=[symbol['name'].encode()])),
+          'name': tf.train.Feature(bytes_list=tf.train.BytesList(value=[symbol['name'].encode()])),
           'data': tf.train.Feature(float_list=tf.train.FloatList(value=[float(x) for x in candle])),  
           'promedio': tf.train.Feature(bytes_list=tf.train.BytesList(value=[symbol['promedio'].encode()])),
           'logro': tf.train.Feature(int64_list=tf.train.Int64List(value=[symbol['logro']])),
@@ -147,6 +158,4 @@ async def create_TFRecords():
         writer.write(example.SerializeToString())
 
   print(f'TFRecords file created successfully at: {tfrecords_file_path}')
-
-
-    
+  

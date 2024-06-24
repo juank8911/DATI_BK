@@ -126,7 +126,7 @@ async function getCandles(datas) {
         // Agregar indicadores a la vela modificada
         console.log(tamaño, '- ',j, '/',tamñoDat,'-',i)
         j++
-        return [...vela];
+        return [vela];
       });
   
       let promed = sumaPo / tamaño;
@@ -138,7 +138,8 @@ async function getCandles(datas) {
       symbol.ema = EMA3; // Valor final de EMA3
       symbol.pft = porcentajeFluctuacion3h; // Valor final del porcentaje de fluctuación de 3 horas
       symbol.SMA = SMA3_vela/tamaño; // Valor final de SMA3
-      candles.push({ symbol, data: modifiedCandles });
+      symbol.data =modifiedCandles
+      candles.push({ symbol});
       console.log(tamñoDat, ' - ', i)
       i++
     } catch (error) {
