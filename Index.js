@@ -87,6 +87,15 @@ app.get('/fexchange', async (req, res) => {
   }
 });
 
+app.get('/run',async (req,res)=>{
+  initializeAI()
+  res.json({message:"Has iniciado Dati Con exito"})
+})
+
+app.get('/train',(req,res)=>{
+  trainModel()
+})
+
   // app.get('/acc',async (req,res)=>{
   //     await getStatusAccountMiddlewere(req,res,()=>{});
       
@@ -153,5 +162,5 @@ app.listen(port, async () => {
     // await initializeAI()
     await testConection();
     console.log(`La aplicación DATI está corriendo en http://localhost:${port}`);
-    console.log(`el Socket DATI está corriendo en http://localhost:8080`);
+    // console.log(`el Socket DATI está corriendo en http://localhost:8080`);
 });

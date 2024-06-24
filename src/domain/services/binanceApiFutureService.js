@@ -91,6 +91,7 @@ async function getCandles(datas) {
   // }));
   tamñoDat = Object.keys(datas).length;
   i=0
+  // mapeo symbols|
   await Promise.all(datas.map(async (symbol) => {
     try {
       let velasSymbl = await UMFuturesClient.getKlines(symbol.name, interval, start, end, size);
@@ -98,14 +99,15 @@ async function getCandles(datas) {
       let sumaPo = 1;
       let tamaño = Object.keys(velasSymbl.data).length;
       let logro = 0;
-      let precioMaximo3h = velasSymbl.data[0][4];
+      let precioMaximo3h = velasSymbl.data[0][1];
       let precioMinimo3h = velasSymbl.data[0][4];
       EMA3 = 0; // Inicializar la EMA3
       let porcentajeFluctuacion3h = 0;
       SMA3_vela = 0.00;
       let a = 0.05;
           j=1;
-      let modifiedCandles = await velasSymbl.data.map((vela) => {
+          // #mapeo velas
+      let modifiedCandles = await velasSymbl.data.map((vela) => {    
         let porcambio = ((vela[4] - vela[1]) / vela[1]) * 100;
         if (porcambio >= 0.5 || porcambio<=-0.5) {
           logro++;
@@ -126,18 +128,19 @@ async function getCandles(datas) {
         // Agregar indicadores a la vela modificada
         console.log(tamaño, '- ',j, '/',tamñoDat,'-',i)
         j++
-        return [vela];
+        return vela;
       });
   
+      // REVISAR FORMULAS (sumValMinTot - SumValMaxTot)*100
       let promed = sumaPo / tamaño;
       // console.log(promed.toFixed(3), "   -  ", logro);
   
       // Agregar indicadores al símbolo
       symbol.promedio =  promed.toFixed(3)+'%'
       symbol.logro = logro;
-      symbol.ema = EMA3; // Valor final de EMA3
-      symbol.pft = porcentajeFluctuacion3h; // Valor final del porcentaje de fluctuación de 3 horas
-      symbol.SMA = SMA3_vela/tamaño; // Valor final de SMA3
+      symbol.ema = EMA3.toFixed(3); // Valor final de EMA3
+      symbol.pft = porcentajeFluctuacion3h.toFixed(3); // Valor final del porcentaje de fluctuación de 3 horas
+      symbol.SMA = (SMA3_vela/tamaño).toFixed(3); // Valor final de SMA3
       symbol.data =modifiedCandles
       candles.push({ symbol});
       console.log(tamñoDat, ' - ', i)

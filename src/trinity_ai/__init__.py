@@ -55,6 +55,25 @@ async def initialize_trinity_model():
         print("Error: ",FileNotFoundError)
         
         
+async def train_model_directly():
+    """
+    Función para iniciar el entrenamiento del modelo de IA directamente.
+    """
+    # 1. Cargar los datos de entrenamiento y prueba
+    training_data = load_training_data()
+    test_data = load_test_data()
+
+    # 2. Entrenar el modelo
+    model = train_model(training_data, test_data)
+
+    # 3. Evaluar el modelo
+    evaluate_model(model, test_data)
+
+    # 4. Guardar el modelo entrenado
+    save_model(model)
+
+    print("¡Entrenamiento completado!")
+        
 __all__ = [
     'load_model',
     'load_test_data',
@@ -63,4 +82,5 @@ __all__ = [
     'evaluate_model',
     'save_model',
     'initialize_trinity_model',
+    'train_model_directly',
 ]

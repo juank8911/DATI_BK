@@ -136,26 +136,66 @@ async def create_TFRecords():
   with tf.io.TFRecordWriter(tfrecords_file_path) as writer:
     for symbol_data in data:
       symbol = symbol_data['symbol']
-      candles = symbol_data['symbol']['data']
-
-      for candle in candles:
-        # Convert candle data to features
-        features = {
-          'name': tf.train.Feature(bytes_list=tf.train.BytesList(value=[symbol['name'].encode()])),
-          'data': tf.train.Feature(float_list=tf.train.FloatList(value=[float(x) for x in candle])),  
-          'promedio': tf.train.Feature(bytes_list=tf.train.BytesList(value=[symbol['promedio'].encode()])),
-          'logro': tf.train.Feature(int64_list=tf.train.Int64List(value=[symbol['logro']])),
-          'ema': tf.train.Feature(float_list=tf.train.FloatList(value=[float(symbol['ema'])])),
-          'pft': tf.train.Feature(float_list=tf.train.FloatList(value=[float(symbol['pft'])])),
-          'SMA': tf.train.Feature(float_list=tf.train.FloatList(value=[float(symbol['SMA'])])),
-          
-        }
+      candles = symbol_data['symbol']['data'] 
+    # Convert candle data to features using the function
+    features = {
+      'name': tf.train.Feature(bytes_list=tf.train.BytesList(value=[symbol['name'].encode()])),
+      'data': create_candlestick_feature(candles),  # Use the function here
+      'promedio': tf.train.Feature(bytes_list=tf.train.BytesList(value=[symbol['promedio'].encode()])),
+      'logro': tf.train.Feature(int64_list=tf.train.Int64List(value=[symbol['logro']])),
+      'ema': tf.train.Feature(float_list=tf.train.FloatList(value=[float(symbol['ema'])])),
+      'pft': tf.train.Feature(float_list=tf.train.FloatList(value=[float(symbol['pft'])])),
+      'SMA': tf.train.Feature(float_list=tf.train.FloatList(value=[float(symbol['SMA'])])),
+    }
 
         # Create a TFRecord example
-        example = tf.train.Example(features=tf.train.Features(feature=features))
+    example = tf.train.Example(features=tf.train.Features(feature=features))
 
         # Write the example to the TFRecords file
-        writer.write(example.SerializeToString())
+    writer.write(example.SerializeToString())
 
   print(f'TFRecords file created successfully at: {tfrecords_file_path}')
   
+  
+def create_candlestick_feature(candles):
+    """
+    Convierte una lista de datos de una vela (candlestick) en una característica TensorFlow.
+
+    Args:
+      candle (list): Lista que contiene los datos de la vela.
+
+    Returns:
+      tf.train.Feature: Una característica TensorFlow con los datos de la vela.
+    """
+    for candel in candles:
+      # Nombres descriptivos para los datos de la vela (en español)
+      timestamp_apertura = int(candel[0])  # Assuming timestamp is in milliseconds
+      precio_apertura = float(candel[1])
+      precio_maximo = float(candel[2])
+      precio_minimo = float(candel[3])
+      precio_cierre = float(candel[4])
+      volumen = float(candel[5])
+      timestamp_cierre = int(candel[6])  # Assuming timestamp is in milliseconds
+      volumen_activo_cotizacion = float(candel[7])
+      numero_operaciones = int(candel[8])
+      precio_promedio = float(candel[9])
+      volumen_cotizacion_promedio = float(candel[10])
+
+      # Crear una característica TensorFlow con nombres claros
+      vela_caracteristica = tf.train.Feature(
+          float_list=tf.train.FloatList(value=[
+              timestamp_apertura,
+              precio_apertura,
+              precio_maximo,
+              precio_minimo,
+              precio_cierre,
+              volumen,
+              timestamp_cierre,
+              volumen_activo_cotizacion,
+              numero_operaciones,
+              precio_promedio,
+              volumen_cotizacion_promedio,
+          ])
+  )
+
+    return vela_caracteristica
