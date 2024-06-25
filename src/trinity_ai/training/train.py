@@ -2,11 +2,11 @@ import json as json
 import pandas as pd
 import yfinance as yf
 # import ..models.tensorflowAiAdapter. as get_klines_data
-from ..models.tensorflowAiAdapter import get_klines_data
+from ..models.tensorflowAiAdapter import get_klines_data,tokensData
 # from ..models.tensorflowAiAdapter import 
 # from ..models import tensorflowAiAdapter
 # from ..datasets import datasets
-
+dataLive=[]
 
 def get_wallet_balance():
     
@@ -17,46 +17,6 @@ def get_wallet_balance():
         float: El saldo de la billetera.
     """
     return 1000.0
-
-# def train_model(training_data, test_data):
-#     # """
-#     # Entrena un modelo de IA para predecir el movimiento de precios de criptomonedas.
-
-#     # Args:
-#     #     training_data (list): Lista de diccionarios con datos de entrenamiento.
-#     #     test_data (list): Lista de diccionarios con datos de prueba.
-
-#     # Returns:
-#     #     tensorflow.keras.Model: El modelo de IA entrenado.
-#     # """
-
-#     # # 1. recorrer los datos de el archivo tranin_data, obtener los que tienen el valor
-#     # logro mas alto, la media, promedio, ema, sma para obtener los tokens con mayor fluctuacion
-    
-
-#     # # 2. una vez tiene los datos de los tokens mas prometedores, solicitar los datos por soket 
-#     # las klines de los tokens seleccionados.
-    
-
-#     # # 3. Buscar los token que generen mas de 0.5% cada nueva vela puede ser en largo o en corto 
-#     #(de subida o bajada del precio ) segun los datos del archivo y el valor actual 
-
-
-#     # # 4. buscar las mejores oportunidades para comprar en largo o vender en corto para obtener el mayor
-#     # porcentaje de ganancia posible que debe ser minimo 0.5% por minuto 
-    
-
-#     # # 5. Pronosticar el movimiento de precios
-#     # predictions = predict_price_movement(model, training_data)
-
-#     # # 6. Simular operaciones de trading
-#     backtest_results = simulate_trading(predictions, training_data)
-
-#     # # 7. Entrenar el modelo de IA
-#     model = tensorflowAiAdapter.create_model()
-#     model.fit(filtered_training_data, epochs=10)  # Ajustar los parámetros de entrenamiento según sea necesario
-
-#     return null
 
 def evaluate_model(model, test_data):
     """
@@ -95,6 +55,13 @@ def train_model(training_data, test_data):
     # 3. Filtrar tokens con oportunidades de trading
     filtered_training_data = filter_trading_opportunities(training_data)
 
+    #3.1 obtener la informacion actual de los tokens filtrados
+    symbolsD = [token_data[0][0] for token_data in filtered_training_data]
+    
+    # 3.2 Enviar la lista de símbolos a la función `tokensData`
+    tokensData(symbolsD)
+    
+    #3.3 obtener los datos de tokenData(symbolsD)
     # 4. Buscar oportunidades de compra en largo o venta en corto
     trading_opportunities = find_trading_opportunities(filtered_training_data)
 
@@ -116,7 +83,7 @@ def find_volatile_symbols(training_data):
     
 
 
-def calculate_volatility(ticker, period="1y", timeperiod=14):
+def calculate_volatility(ticker, period="10m", timeperiod=10):
     """
     Calcula la volatilidad de los precios de un activo utilizando YFinance.
 
@@ -136,18 +103,6 @@ def calculate_volatility(ticker, period="1y", timeperiod=14):
 
     return null
 
-def predict_price_movement(model, input_data):
-    """
-    Pronostica el movimiento de precios usando el modelo de IA.
-
-    Args:
-        model (tensorflow.keras.Model): El modelo de IA entrenado.
-        input_data (list): Lista de diccionarios con datos de entrada para la predicción.
-
-    Returns:
-        list: Una lista de predicciones de movimiento de precios.
-    """
-    return null
 
 def simulate_trading(predictions, filtered_training_data):
   """
@@ -176,7 +131,8 @@ def simulate_trading(predictions, filtered_training_data):
   position = 0  # Posición actual (0: sin posición, 1: compra, -1: venta)
   entry_price = 0  # Precio de entrada a la operación actual
   cumulative_profit = 0  # Ganancia acumulada
-
+  cumulative_loss = 0  # Pérdida acumulada
+# obtenero los datos de ultima vela la actual con 
   # Recorrer las predicciones
   for i in range(len(predictions)):
     # Obtener características y etiqueta de la vela actual
@@ -191,13 +147,13 @@ def simulate_trading(predictions, filtered_training_data):
         amount_to_invest = calculate_investment_amount(balance, max_leverage, current_features)
 
         # Comprar token
-        buy_token(token_name, amount_to_invest)
+        buy_token_long(token_name, amount_to_invest)
         position = 1  # Actualizar posición a compra
         entry_price = current_features["precio_cierre"]  # Registrar precio de entrada
 
       elif position == -1:  # Posición de venta actual
         # Vender token para cerrar posición
-        sell_token(token_name)
+        sell_token_long(token_name)
         position = 0  # Actualizar posición a sin posición
 
     elif probability_down > probability_up:

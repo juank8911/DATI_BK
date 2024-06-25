@@ -13,9 +13,17 @@ const cmFuturesClient = new CMFutures("","", {
   baseURL: config.BINACM_API_URL
 })
 
-const UMFuturesClient = new UMFutures("","",{
+const umFuturesClient = new UMFutures(config.API_KEY,config.SECRET_KEY,{
     baseURL: config.BINAFM_API_URL
 })
+
+async function getBalanceFuture()
+{
+  umFuturesClient
+  .getFuturesAccountBalanceV2()
+  .then((response) => console.log(response))
+  .catch(console.error)
+}
 
 
 
@@ -154,13 +162,14 @@ async function getCandles(datas) {
 }
 
 
-
+// function
 
 module.exports = 
 {
     getExchangeInfo,
     getCandles,
     testConectionServ,
+    getBalanceFuture,
 }
 
 

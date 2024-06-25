@@ -66,6 +66,15 @@ async function testConectionMiddleware() {
 {throw err}
 }
 
+async function getBalanceFutureMiddleware()
+{
+  try {
+    let balance = await binanceApiFutureService.getBalanceFutureServ();
+    return balance
+  } catch (error) {
+    console.log(error)
+  }
+}
 
 async function CreateTFR() {
   console.log('create');
@@ -121,4 +130,6 @@ getExchangeMiddleware,
 getCandelsUMFutMiddleware,
 testConectionMiddleware,
 CreateTFR,
+getBalanceFutureMiddleware,
+
 }
