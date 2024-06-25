@@ -1,7 +1,51 @@
 import json
 import os
 import tensorflow as tf
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = 0
 # file_path = 'J:\ProyectosCriptoMon\DATI\src\trinity_ai\datasets\dataFut.json'
+
+
+
+def load_data_from_tfrecords(tfrecords_file_path):
+  """
+  Loads training data from a TFRecords file.
+
+  Args:
+      tfrecords_file_path (str): Path to the TFRecords file.
+
+  Returns:
+      list: List of dictionaries, where each dictionary represents a training example in TensorFlow format.
+  """
+
+  tf_data = []
+  for example in tf.data.TFRecordDataset(tfrecords_file_path):
+    features = tf.io.parse_single_example(
+        example,
+        features={
+            'name': tf.io.FixedLenFeature([], tf.string),
+            'data': tf.io.FixedLenSequenceFeature([], tf.float32, allow_missing=True),  # Parse 'data' as a sequence of floats
+            'promedio': tf.io.FixedLenFeature([], tf.string),
+            'logro': tf.io.FixedLenFeature([], tf.int64),
+            'ema': tf.io.FixedLenFeature([], tf.float32),
+            'pft': tf.io.FixedLenFeature([], tf.float32),
+            'SMA': tf.io.FixedLenFeature([], tf.float32),
+        }
+    )
+
+    # Create a dictionary with TensorFlow tensors
+    tf_symbol = {
+        'name': features['name'],
+        'data': features['data'],  # 'data' is already a TensorFlow tensor
+        'promedio': features['promedio'],
+        'logro': features['logro'],
+        'ema': features['ema'],
+        'pft': features['pft'],
+        'SMA': features['SMA'],
+    }
+
+    tf_data.append(tf_symbol)
+
+  return tf_data
 
 def load_test_data(file_path):
     """
@@ -40,7 +84,7 @@ def load_test_data(file_path):
         #     # Crear un diccionario con los datos en formato TensorFlow
             tf_symbol = {
                 'name': tf.convert_to_tensor(name, dtype=tf.string),
-                'data': data_tensor,
+                'data': data_klines,
                 'promedio': tf.convert_to_tensor(symbol['promedio'], dtype=tf.string),
                 'logro': tf.convert_to_tensor(symbol['logro'], dtype=tf.int64),
                 'ema': tf.convert_to_tensor(symbol['ema'], dtype=tf.float32),
@@ -56,10 +100,6 @@ def load_test_data(file_path):
         print(f"Error: {e}")
         return None  # Indicate file not found  
 
-
-import json
-import tensorflow as tf
-import os  # Import for file path handling
 
 def load_training_data(file_path='/dataFut.json'):
   """
@@ -92,13 +132,35 @@ def load_training_data(file_path='/dataFut.json'):
       data_klines = symbol_dict['data'][0]  # Assuming the first list contains kline data
 
       # Separate and convert data_klines (assuming specific structure)
-      timestamps = tf.convert_to_tensor([int(x) for x in data_klines[::7]], dtype=tf.int64)  # Extract timestamps
-      numeric_values = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0'
+      timestamps = tf.convert_to_tensor([int(x) for x in data_klines['timestamps']], dtype=tf.int64)  # Extract timestamps
+      precio_apertura = tf.convert_to_tensor([float(x) for x in data_klines['precio_apertura'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
+      precio_maximo = tf.convert_to_tensor([float(x) for x in data_klines['precio_maximo'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
+      precio_minimo = tf.convert_to_tensor([float(x) for x in data_klines['precio_minimo'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
+      precio_cierre = tf.convert_to_tensor([float(x) for x in data_klines['precio_cierre'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
+      volumen = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
+      timestamp_cierre = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
+      volumen_activo_cotizacion = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
+      numero_operaciones = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
+      precio_promedio = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
+      volumen_cotizacion_promedio = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
+      fluctua = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',  
+     
 
       # Create a dictionary with TensorFlow tensors
       tf_symbol = {
           'name': tf.convert_to_tensor(name, dtype=tf.string),
-          'data': tf.stack([timestamps, numeric_values]),  # Stack timestamps and numeric values (assuming consistent structure)
+          'data': tf.stack([timestamps,
+                            precio_apertura,
+                            precio_maximo,
+                            precio_minimo,
+                            precio_cierre,
+                            volumen,
+                            timestamp_cierre,
+                            volumen_activo_cotizacion,
+                            numero_operaciones,
+                            precio_promedio,
+                            volumen_cotizacion_promedio,
+                            fluctua,]),  # Stack timestamps and numeric values (assuming consistent structure)
           'promedio': tf.convert_to_tensor(symbol_dict['promedio'], dtype=tf.string),
           'logro': tf.convert_to_tensor(symbol_dict['logro'], dtype=tf.int64),
           'ema': tf.convert_to_tensor(symbol_dict['ema'], dtype=tf.float32),
@@ -169,17 +231,18 @@ def create_candlestick_feature(candles):
     """
     for candel in candles:
       # Nombres descriptivos para los datos de la vela (en español)
-      timestamp_apertura = int(candel[0])  # Assuming timestamp is in milliseconds
-      precio_apertura = float(candel[1])
-      precio_maximo = float(candel[2])
-      precio_minimo = float(candel[3])
-      precio_cierre = float(candel[4])
-      volumen = float(candel[5])
+      timestamp_apertura = int(candel['timestamp_apertura'])  # Assuming timestamp is in milliseconds
+      precio_apertura = float(candel['precio_apertura'])
+      precio_maximo = float(candel['precio_maximo'])
+      precio_minimo = float(candel['precio_minimo'])
+      precio_cierre = float(candel['precio_cierre'])
+      volumen = float(candel['volumen'])
       timestamp_cierre = int(candel[6])  # Assuming timestamp is in milliseconds
-      volumen_activo_cotizacion = float(candel[7])
-      numero_operaciones = int(candel[8])
-      precio_promedio = float(candel[9])
-      volumen_cotizacion_promedio = float(candel[10])
+      volumen_activo_cotizacion = float(candel['timestamp_cierre'])
+      numero_operaciones = int(candel['numero_operaciones'])
+      precio_promedio = float(candel['precio_promedio'])
+      volumen_cotizacion_promedio = float(candel['volumen_cotizacion_promedio'])
+      fluctua = float(candel['fluctua'])
 
       # Crear una característica TensorFlow con nombres claros
       vela_caracteristica = tf.train.Feature(
@@ -195,6 +258,7 @@ def create_candlestick_feature(candles):
               numero_operaciones,
               precio_promedio,
               volumen_cotizacion_promedio,
+              fluctua,
           ])
   )
 

@@ -1,11 +1,10 @@
 const { iterateSync } = require('glob');
 const binanceApiFutureService = require('../../domain/services/binanceApiFutureService');
-
+const { spawn } = require('child_process');
 const fs = require('fs'); 
 const { Console } = require('console')
 const logger = new Console({ stdout: process.stdout, stderr: process.stderr })
 const { UMStream } = require('@binance/futures-connector');
-
 
 
 
@@ -43,6 +42,7 @@ async function getExchangeMiddleware(req, res, next) {
       staus: 200
     }
     // console.log(datas)
+        // Execute the Python script
     return datas // Send the new object
   } catch (error) {
     console.error('Error en el middleware:', error);
@@ -66,6 +66,29 @@ async function testConectionMiddleware() {
 {throw err}
 }
 
+
+async function CreateTFR()
+{
+  try {
+    const pythonProcess = spawn('python', ['./src/trinity_ai/datasets/datasets.py', 'create_TFRecords']);
+
+    // Handle Python script output (optional)
+    pythonProcess.stdout.on('data', (data) => {
+      console.log(`Python script output: ${data}`);
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      console.error(`Python script error: ${data}`);
+    });
+
+    // Wait for the Python script to finish (optional)
+    pythonProcess.on('close', (code) => {
+      console.log(`Python script exited with code ${code}`);
+    });
+  } catch (error) {
+    
+  }
+}
 
 
 
@@ -92,4 +115,5 @@ module.exports = {
 getExchangeMiddleware,
 getCandelsUMFutMiddleware,
 testConectionMiddleware,
+CreateTFR,
 }

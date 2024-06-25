@@ -6,7 +6,7 @@ const bodyParser = require('body-parser')
 const { spawn } = require('child_process');
 const ws = require('express-ws'); // Import ws library
 const { getFuturesTokenprMiddleware, getFuturesCandlesticksDataMiddleware, getStatusAccountMiddlewere } = require('./src/infrastructure/adapters/binanceApiAdapter');
-const { getExchangeMiddleware, getCandelsUMFutMiddleware,testConectionMiddleware} = require('./src/infrastructure/adapters/binanceApiFutAdapter');
+const { getExchangeMiddleware, getCandelsUMFutMiddleware,testConectionMiddleware,CreateTFR} = require('./src/infrastructure/adapters/binanceApiFutAdapter');
 //importar TensorFlow para node   
 
 const fs = require('fs');  
@@ -80,6 +80,7 @@ app.get('/fexchange', async (req, res) => {
     console.log('dataFut.json file created successfully!');
       console.log("fin velas")
     // // Send the response
+   if(await velas){ CreateTFR()}
      res.status(200).json(await velas)
   } catch (error) {
     console.error('Error in /fexchange route:', error);
