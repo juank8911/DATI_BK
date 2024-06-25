@@ -1,8 +1,9 @@
 import json as json
 import pandas as pd
 import yfinance as yf
+import subprocess
 # import ..models.tensorflowAiAdapter. as get_klines_data
-from ..models.tensorflowAiAdapter import get_klines_data,tokensData
+from ..models.tensorflowAiAdapter import get_klines_data,tokensData, tokensData, predict_and_update_opportunities
 # from ..models.tensorflowAiAdapter import 
 # from ..models import tensorflowAiAdapter
 # from ..datasets import datasets
@@ -16,6 +17,33 @@ def get_wallet_balance():
     Returns:
         float: El saldo de la billetera.
     """
+
+    # Ruta del script de Node.js
+    script_path = "j:/ProyectosCriptoMon/DATI/src/infrastructure/adapters/binanceApiFutAdapter.js"
+    
+    # Nombre del método a llamar
+    method_name = "getBalanceFutureMiddleware"
+    
+    # Argumentos del método (lista o diccionario)
+    method_args = []  # Lista vacía para este ejemplo
+    
+    # Ejecutar el script y capturar la salida
+    process = subprocess.Popen(
+        ["node", script_path, method_name, *method_args],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    
+    # Decodificar la salida JSON
+    stdout, stderr = process.communicate()
+    output_data = json.loads(stdout.decode())
+    
+    # Comprobar si hubo errores
+    if stderr:
+        print("Error:", stderr.decode())
+    else:
+        # Procesar los datos obtenidos
+        print("Datos:", output_data)
     return 1000.0
 
 def evaluate_model(model, test_data):
@@ -34,7 +62,7 @@ def evaluate_model(model, test_data):
     # # Mostrar resultados de la evaluación
     # Plot_evaluation_results(loss, accuracy)
 
-def train_model(training_data, test_data):
+async def train_model(training_data, test_data):
     """
     Entrena un modelo de IA para predecir el movimiento de precios de criptomonedas.
 
@@ -59,11 +87,11 @@ def train_model(training_data, test_data):
     symbolsD = [token_data[0][0] for token_data in filtered_training_data]
     
     # 3.2 Enviar la lista de símbolos a la función `tokensData`
-    tokensData(symbolsD)
+    # 3.2 Iniciar suscripciones Webhook para datos en vivo y almacenar datos en dataLive
+    dataLive = await tokensData(symbolsD)
     
-    #3.3 obtener los datos de tokenData(symbolsD)
     # 4. Buscar oportunidades de compra en largo o venta en corto
-    trading_opportunities = find_trading_opportunities(filtered_training_data)
+    trading_opportunities = find_trading_opportunities(filtered_training_data,dataLive)
 
     # 5. Pronosticar el movimiento de precios
     predictions = predict_price_movement(model, filtered_training_data)
@@ -246,37 +274,43 @@ def filter_trading_opportunities(training_data):
   return dataset
     
     
-def find_trading_opportunities(filtered_training_data):
-  """
-  Función para filtrar tokens prometedores del conjunto de datos filtrado.
+def find_trading_opportunities(filtered_training_data, live_data):
+    """
+    Función para identificar oportunidades de trading utilizando datos filtrados y datos en tiempo real.
 
-  Args:
-    filtered_training_data: Conjunto de datos de TensorFlow filtrado.
+    Args:
+        filtered_training_data: Conjunto de datos de TensorFlow filtrado.
+        live_data: Diccionario con datos de mercado en tiempo real.
 
-  Returns:
-    Lista de tokens prometedores.
-  """
+    Returns:
+        Lista de diccionarios con información sobre las oportunidades de trading.
+    """
 
-  # Extraer datos del conjunto de datos
-  features, labels = filtered_training_data
+    trading_opportunities = []
 
-  # Calcular métricas de rendimiento
-  performance_metrics = calculate_performance_metrics(features, labels)
+    for token_data in filtered_training_data:
+        symbol = token_data[0][0]  # Obtener nombre del token
+        token_live_data = live_data.get(symbol)  # Obtener datos en tiempo real del token
 
-  # Filtrar tokens
-  filtered_tokens = []
-  for token_data, metrics in zip(filtered_training_data, performance_metrics):
-    token_name = token_data[0][0]  # Obtener nombre del token
-    average_profit = metrics["average_profit"]
-    win_rate = metrics["win_rate"]
-    sharpe_ratio = metrics["sharpe_ratio"]
+        # Combinar datos históricos y en tiempo real
+        combined_data = token_data[0] + [token_live_data['last_candle']]
 
-    # Aplicar criterios de filtrado
-    if (average_profit > 0.005) and (win_rate > 0.5) and (sharpe_ratio > 1):
-      filtered_tokens.append(token_name)
+        # Calcular métricas de rendimiento con datos combinados
+        performance_metrics = calculate_performance_metrics(combined_data)
 
-  # Retornar lista de tokens prometedores
-  return filtered_tokens
+        # Aplicar criterios de filtrado
+        if (performance_metrics["average_profit"] > 0.005) and (
+            performance_metrics["win_rate"] > 0.5
+        ) and (performance_metrics["sharpe_ratio"] > 1):
+            # Agregar oportunidad de trading a la lista
+            trading_opportunities.append({
+                "symbol": symbol,
+                "average_profit": performance_metrics["average_profit"],
+                "win_rate": performance_metrics["win_rate"],
+                "sharpe_ratio": performance_metrics["sharpe_ratio"],
+            })
+
+    return trading_opportunities
 
 def predict_price_movement(model, filtered_training_data):
   """
@@ -454,4 +488,40 @@ def calculate_investment_amount(balance, max_leverage, current_features):
 
   # Retornar cantidad total a invertir
   return total_investment
+
+def calculate_performance_metrics(data):
+    """
+    Calcula métricas de rendimiento para una estrategia de trading.
+
+    Args:
+        data (list): Lista de diccionarios con datos de trading (precios de cierre, señales de entrada/salida).
+
+    Returns:
+        Diccionario con las siguientes métricas:
+            - "average_profit": Beneficio promedio por operación.
+            - "win_rate": Porcentaje de operaciones ganadoras.
+            - "sharpe_ratio": Ratio de Sharpe.
+    """
+
+    # Convertir datos a NumPy arrays
+    prices = np.array([entry["close"] for entry in data])
+    signals = np.array([entry["signal"] for entry in data])
+
+    # Calcular retornos
+    returns = np.diff(prices)
+
+    # Filtrar retornos por señal
+    positive_returns = returns[signals == 1]
+    negative_returns = returns[signals == -1]
+
+    # Calcular métricas
+    average_profit = np.mean(positive_returns) if len(positive_returns) > 0 else 0
+    win_rate = np.mean(signals == 1)
+    sharpe_ratio = calculate_sharpe_ratio(returns, average_profit)
+
+    return {
+        "average_profit": average_profit,
+        "win_rate": win_rate,
+        "sharpe_ratio": sharpe_ratio,
+    }
     
