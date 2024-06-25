@@ -159,8 +159,8 @@ async function initializeAI() {
 
 // Inicia el servidor y prueba la conexión con Binance
 app.listen(port, async () => {
-    await initializeAI()
     await testConection();
+    await initializeAI()
     console.log(`La aplicación DATI está corriendo en http://localhost:${port}`);
     // console.log(`el Socket DATI está corriendo en http://localhost:8080`);
 });

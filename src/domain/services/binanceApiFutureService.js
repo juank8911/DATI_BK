@@ -13,7 +13,7 @@ const cmFuturesClient = new CMFutures("","", {
   baseURL: config.BINACM_API_URL
 })
 
-const umFuturesClient = new UMFutures(config.API_KEY,config.SECRET_KEY,{
+const UMFuturesClient = new UMFutures(config.API_KEY,config.SECRET_KEY,{
     baseURL: config.BINAFM_API_URL
 })
 

@@ -190,8 +190,8 @@ def load_training_data(file_path='J:\ProyectosCriptoMon\DATI\src\trinity_ai\data
 async def create_TFRecords():
   """Converts dataFut.json to TFRecords and saves it to src\\trinity_ai\datasets."""
 
-  # Path to the JSON file
-  json_file_path = 'J:\ProyectosCriptoMon\DATI\src\\trinity_ai\datasets\dataFut.json'  # Corrected path
+  # Path to the JSON file (corrected path)
+  json_file_path = 'J:\ProyectosCriptoMon\DATI\src\\trinity_ai\datasets\dataFut.json'
 
   # Path to save the TFRecords file
   tfrecords_file_path = 'J:\ProyectosCriptoMon\DATI\src\\trinity_ai\datasets\\training.tfrecord'
@@ -205,23 +205,25 @@ async def create_TFRecords():
     for symbol_data in data:
       symbol = symbol_data['symbol']
       candles = symbol_data['symbol']['data']
-
+      # for symbol in symbol_data['symbol']:
+      print(symbol['name'])
+      print('----------------------------------------------------------------------------')
       # Convert candle data to features using the function
       features = {
-        'name': tf.train.Feature(bytes_list=tf.train.BytesList(value=[symbol['name'].encode()])),
-        'data': create_candlestick_feature(candles),  # Use the function here
-        'promedio': tf.train.Feature(bytes_list=tf.train.BytesList(value=[symbol['promedio'].encode()])),
-        'logro': tf.train.Feature(int64_list=tf.train.Int64List(value=[symbol['logro']])),
-        'ema': tf.train.Feature(float_list=tf.train.FloatList(value=[float(symbol['ema'])])),
-        'pft': tf.train.Feature(float_list=tf.train.FloatList(value=[float(symbol['pft'])])),
-        'SMA': tf.train.Feature(float_list=tf.train.FloatList(value=[float(symbol['SMA'])])),
+          'name': tf.train.Feature(bytes_list=tf.train.BytesList(value=[symbol['promedio'].encode()])),
+          'data': create_candlestick_feature(candles),  # Use the function here
+          'promedio': tf.train.Feature(bytes_list=tf.train.BytesList(value=[symbol['promedio'].encode()])),
+          'logro': tf.train.Feature(int64_list=tf.train.Int64List(value=[symbol['logro']])),
+          'ema': tf.train.Feature(float_list=tf.train.FloatList(value=[float(symbol['ema'])])),
+          'pft': tf.train.Feature(float_list=tf.train.FloatList(value=[float(symbol['pft'])])),
+          'SMA': tf.train.Feature(float_list=tf.train.FloatList(value=[float(symbol['SMA'])])),
       }
+      print(features)
+       # Create a separate Example object for each symbol data
+    example = tf.train.Example(features=features)
 
-      # Create a TFRecord example, passing the dictionary directly
-      example = tf.train.Example(features=features)
-
-      # Write the example to the TFRecords file
-      writer.write(example.SerializeToString())
+        # Write the example to the TFRecords file
+    writer.write(example.SerializeToString())
 
   print(f'TFRecords file created successfully at: {tfrecords_file_path}')
   
