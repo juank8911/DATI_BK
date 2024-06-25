@@ -3,7 +3,7 @@ import pandas as pd
 import yfinance as yf
 import subprocess
 # import ..models.tensorflowAiAdapter. as get_klines_data
-from ..models.tensorflowAiAdapter import get_klines_data,tokensData, tokensData, predict_and_update_opportunities
+from ..models.tensorflowAiAdapter import get_klines_data,tokensData, tokensData
 # from ..models.tensorflowAiAdapter import 
 # from ..models import tensorflowAiAdapter
 # from ..datasets import datasets
@@ -246,7 +246,8 @@ def filter_trading_opportunities(training_data):
     # Recorrer las velas
     for i in range(len(klines) - 1):
       # Calcular cambio de precio
-      price_change = (klines[i + 1]["precio_cierre"] - klines[i]["precio_cierre"]) / klines[i]["precio_cierre"]
+      print(klines[i + 1][4])
+      price_change = (klines[i + 1][4] - klines[i][4]) / klines[i][4]
 
       # Verificar si hay oportunidad de trading
       if abs(price_change) > 0.005:

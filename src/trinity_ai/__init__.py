@@ -53,7 +53,7 @@ async def initialize_trinity_model():
             print('creando test')
             test_data = await load_data_from_tfrecords(tfrecords_file_path='J:\ProyectosCriptoMon\DATI\src\\trinity_ai\datasets\\training.tfrecord')
             print('creando model')
-            model = train_model(training_data, test_data)
+            model = await train_model(training_data, test_data)
             print('evaluate')
             evaluate_model(model, test_data)
             save_model(model, './models')
