@@ -12,4 +12,7 @@ module.exports = {
     BINACM_API_URL: 'https://dapi.binance.com',
     BINAFM_API_URL: 'https://fapi.binance.com',
     BINATST_API_URL: 'https://testnet.binancefuture.com',
+    isTraining: true,
+    
+  
 };

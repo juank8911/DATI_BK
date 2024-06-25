@@ -99,8 +99,60 @@ def get_token_leverage(token_name):
   # Retornar apalancamiento máximo
   return max_leverage
 
+async def tokensData(symbolsD):
+    """
+    Suscribe a Webhooks para eventos 'kline_closed' en Binance Futures para los símbolos proporcionados.
+
+    Args:
+        symbolsD (list): Lista de símbolos a monitorear.
+    """
+
+    exchange = ccxt.binance()
+
+    async def handle_kline_closed(data):
+        """
+        Procesa las notificaciones Webhook 'kline_closed' y actualiza los datos del token (implementación de ejemplo).
+
+        Args:
+            data (dict): Datos de notificación Webhook que contienen información sobre el símbolo y la vela.
+        """
+
+        symbol = data['symbol']
+        open_time = data['k']['openTime']
+        open_price = data['k']['open']
+        close_price = data['k']['close']
+        volume = data['k']['volume']
+
+        # Actualiza los datos del token en tu sistema (adapta según tu estructura de datos)
+        # Ejemplo:
+        if symbol in token_data:
+            token_data[symbol]['last_candle'] = {
+                'open_time': open_time,
+                'open_price': open_price,
+                'close_price': close_price,
+                'volume': volume
+            }
+        else:
+            token_data[symbol] = {
+                'last_candle': {
+                    'open_time': open_time,
+                    'open_price': open_price,
+                    'close_price': close_price,
+                    'volume': volume
+                }
+            }
+
+        print(f"Notificación Webhook recibida para {symbol}: Apertura: {open_price}, Cierre: {close_price}")
+
+    # Suscríbete a Webhooks para cada símbolo
+    for symbol in symbolsD:
+        await exchange.subscribe_to_kline_updates(symbol=symbol, interval='1m', callback=handle_kline_closed)
+
+    # Mantén la conexión abierta para recibir notificaciones Webhook (opcional)
+    await exchange.wait_for_subscription_response()
 
 if __name__ == "__main__":
     get_klines_data(),
     load_model(),
+    tokensData(),
   
