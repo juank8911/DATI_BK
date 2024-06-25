@@ -76,6 +76,29 @@ def get_klines_data():
 
     return klines_data
 
+def get_token_leverage(token_name):
+  """
+  Función para obtener el apalancamiento máximo de un token.
+
+  Args:
+    token_name: Nombre del token (por ejemplo, "BTC/USDT").
+
+  Returns:
+    Apalancamiento máximo del token (float).
+  """
+
+  # Obtener exchange de la API
+  exchange = ccxt.binance()  # Suponiendo que se utiliza una API de CCXT inicializada
+
+  # Consultar información del token
+  token_info = exchange.fetch_ticker(token_name)
+
+  # Extraer apalancamiento máximo
+  max_leverage = token_info["info"]["maxLeverage"]
+
+  # Retornar apalancamiento máximo
+  return max_leverage
+
 
 if __name__ == "__main__":
     get_klines_data(),

@@ -149,34 +149,94 @@ def predict_price_movement(model, input_data):
     """
     return null
 
-def simulate_trading(predictions, training_data, leverage=2, min_profit_percentage=0.01):
-    """
-    Simula operaciones de trading con las predicciones del modelo.
+def simulate_trading(predictions, filtered_training_data):
+  """
+  Función para simular operaciones de trading con base en las predicciones.
 
-    Args:
-        predictions (list): Lista de predicciones de movimiento de precios.
-        training_data (list): Lista de diccionarios con datos de entrenamiento.
-        leverage (int): El apalancamiento a utilizar en las operaciones.
-        min_profit_percentage (float): El porcentaje mínimo de ganancia para cerrar una operación.
+  Args:
+    predictions: Lista de predicciones con información de probabilidad de subida/bajada y magnitud de la fluctuación.
+    filtered_training_data: Conjunto de datos filtrado con características etiquetadas.
+  """
 
-    Returns:
-        list: Una lista de resultados de las operaciones simuladas.
-    """
-    trading_results = []
-    # for i, prediction in enumerate(predictions):
-        # Verifica si la predicción indica una operación en largo o corto
-        # if prediction > 0.5:  # Ajusta el umbral según sea necesario
-            # Abre una operación en largo
-            # entry_price = training_data[i]['candles'][-1]['close']
-            # Simula la operación y calcula la ganancia
-            # ...
-            # Cierra la operación cuando se alcanza el objetivo de ganancia o se alcanza un límite de tiempo
-            # ...
-            # trading_results.append({'symbol': training_data[i]['symbol'], 'operation': 'largo', 'profit': profit, 'duration': duration})
-        # else:
-            # Abre una operación en corto
-            # ...
-    return trading_results
+  # Obtener información de las predicciones
+  probability_up = predictions["upward_probability"]
+  probability_down = predictions["downward_probability"]
+  price_fluctuation = predictions["price_fluctuation"]
+
+  # Obtener datos del conjunto de datos filtrado
+  features = filtered_training_data.features
+  labels = filtered_training_data.labels
+
+  token_name = features["token_name"]
+  # Obtener apalancamiento máximo del token
+  max_leverage = get_token_leverage(token_name)  # Función no implementada
+
+  # Inicializar variables de trading
+  balance = get_wallet_balance()  # Obtener balance inicial
+  position = 0  # Posición actual (0: sin posición, 1: compra, -1: venta)
+  entry_price = 0  # Precio de entrada a la operación actual
+  cumulative_profit = 0  # Ganancia acumulada
+
+  # Recorrer las predicciones
+  for i in range(len(predictions)):
+    # Obtener características y etiqueta de la vela actual
+    current_features = features[i]
+    current_label = labels[i]
+
+    # Verificar si hay predicción de subida o bajada
+    if probability_up > probability_down:
+      # Predicción de subida
+      if position == 0:  # Sin posición actual
+        # Calcular cantidad a invertir
+        amount_to_invest = calculate_investment_amount(balance, max_leverage, current_features)
+
+        # Comprar token
+        buy_token(token_name, amount_to_invest)
+        position = 1  # Actualizar posición a compra
+        entry_price = current_features["precio_cierre"]  # Registrar precio de entrada
+
+      elif position == -1:  # Posición de venta actual
+        # Vender token para cerrar posición
+        sell_token(token_name)
+        position = 0  # Actualizar posición a sin posición
+
+    elif probability_down > probability_up:
+      # Predicción de bajada
+      if position == 0:  # Sin posición actual
+        # Calcular cantidad a invertir
+        amount_to_invest = calculate_investment_amount(balance, max_leverage, current_features)
+
+        # Vender token en corto
+        sell_token_short(token_name, amount_to_invest)
+        position = -1  # Actualizar posición a venta
+        entry_price = current_features["precio_cierre"]  # Registrar precio de entrada
+
+      elif position == 1:  # Posición de compra actual
+        # Comprar token para cerrar posición
+        buy_token(token_name)
+        position = 0  # Actualizar posición a sin posición
+
+    # Calcular ganancia/pérdida en la operación actual
+    current_profit = calculate_profit_loss(current_features["precio_cierre"], entry_price, position)
+
+    # Actualizar balance y ganancia acumulada
+    balance += current_profit
+    cumulative_profit += current_profit
+
+    # Guardar el 25% de las ganancias cuando el balance aumenta en $100
+    if balance >= previous_balance + 100:
+      save_profit(cumulative_profit * 0.25)  # Función no implementada
+      previous_balance = balance  # Actualizar balance anterior
+
+    # Imprimir información de la operación
+    print(f"Operación {i+1}:")
+    print(f"Predicción: {probability_up:.2%} subida, {probability_down:.2%} bajada")
+    print(f"Magnitud de fluctuación: {price_fluctuation:.2%}")
+    print(f"Posición: {position}")
+    print(f"Ganancia/pérdida actual: {current_profit:.2%}")
+    print(f"Balance actual: {balance:.2%}")
+    print(f"Ganancia acumulada: {cumulative_profit:.2%}")
+    print("-------------------------")
 
 def filter_trading_opportunities(training_data):
 
@@ -394,4 +454,48 @@ def calculate_prediction_accuracy(prediction_probabilities, labels):
 
   # Retornar probabilidad de predicción correcta
   return prediction_accuracy
+
+def calculate_investment_amount(balance, max_leverage, current_features):
+  """
+  Función para calcular la cantidad a invertir en una operación de trading.
+
+  Args:
+    balance: Balance disponible en la cuenta (float).
+    max_leverage: Apalancamiento máximo del token (float).
+    current_features: Vector de características de la vela actual (dict).
+
+  Returns:
+    Cantidad a invertir (float).
+  """
+
+  # Obtener precio actual del token
+  current_price = current_features["precio_cierre"]
+
+  # Establecer inversión mínima por token
+  min_investment_per_token = 0.7  # USD
+
+  # Determinar número máximo de tokens a invertir
+  if balance < 3:
+    number_of_tokens = 1
+  elif balance < 6:
+    number_of_tokens = 2
+  elif balance < 10:
+    number_of_tokens = 3
+  else:
+    number_of_tokens = int(balance / min_investment_per_token)
+
+  # Calcular inversión total por token
+  investment_per_token = balance / number_of_tokens
+
+  # Limitar inversión por token a la inversión mínima
+  investment_per_token = max(investment_per_token, min_investment_per_token)
+
+  # Calcular cantidad total a invertir
+  total_investment = investment_per_token * number_of_tokens
+
+  # Aplicar apalancamiento
+  total_investment *= max_leverage
+
+  # Retornar cantidad total a invertir
+  return total_investment
     
