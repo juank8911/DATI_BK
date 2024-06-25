@@ -7,7 +7,7 @@ import tensorflow as tf
 
 
 
-def load_data_from_tfrecords(tfrecords_file_path):
+async def load_data_from_tfrecords(tfrecords_file_path='J:\ProyectosCriptoMon\DATI\src\\trinity_ai\datasets\\training.tfrecord'):
   """
   Loads training data from a TFRecords file.
 
@@ -131,22 +131,25 @@ def load_training_data(file_path='J:\ProyectosCriptoMon\DATI\src\trinity_ai\data
       # Extract necessary information
       name = symbol_dict['name']
       data_klines = symbol_dict['data'][0]  # Assuming the first list contains kline data
-      print(data_klines)
+      print(symbol_dict['data'])
+      velas = []
       # Separate and convert data_klines (assuming specific structure)
-      timestamps = tf.convert_to_tensor([int(x) for x in data_klines['timestamps']], dtype=tf.int64)  # Extract timestamps
-      print('2')
-      precio_apertura = tf.convert_to_tensor([float(x) for x in data_klines['precio_apertura'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
-      print('2')
-      precio_maximo = tf.convert_to_tensor([float(x) for x in data_klines['precio_maximo'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
-      precio_minimo = tf.convert_to_tensor([float(x) for x in data_klines['precio_minimo'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
-      precio_cierre = tf.convert_to_tensor([float(x) for x in data_klines['precio_cierre'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
-      volumen = tf.convert_to_tensor([float(x) for x in data_klines['volumen'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
-      timestamp_cierre = tf.convert_to_tensor([float(x) for x in data_klines['timestamp_cierre'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
-      volumen_activo_cotizacion = tf.convert_to_tensor([float(x) for x in data_klines['volumen_activo_cotizacion'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
-      numero_operaciones = tf.convert_to_tensor([float(x) for x in data_klines['numero_operaciones'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
-      precio_promedio = tf.convert_to_tensor([float(x) for x in data_klines['precio_promedio'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
-      volumen_cotizacion_promedio = tf.convert_to_tensor([float(x) for x in data_klines['volumen_cotizacion_promedio'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
-      fluctua = tf.convert_to_tensor([float(x) for x in data_klines['fluctua'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',  
+      # for vela in data_klines:
+      vela = data_klines
+      timestamps= tf.convert_to_tensor(vela['timestamp_apertura'], dtype=tf.float64),
+      precio_apertura = float(vela['precio_apertura'])
+      precio_apertura = tf.convert_to_tensor(precio_apertura, dtype=tf.float64)
+      precio_maximo = tf.convert_to_tensor(vela['precio_maximo'], dtype=tf.float64),
+      precio_minimo= tf.convert_to_tensor(vela['precio_minimo'], dtype=tf.float64),
+      precio_cierre = tf.convert_to_tensor(vela['precio_cierre'], dtype=tf.float64),
+      volumen = tf.convert_to_tensor(vela['volumen'], dtype=tf.float64),
+      timestamp_cierre = tf.convert_to_tensor(vela['timestamp_cierre'], dtype=tf.float64),
+      volumen_activo_cotizacion = tf.convert_to_tensor(vela['volumen_activo_cotizacion'], dtype=tf.float64),
+      numero_operaciones = tf.convert_to_tensor(vela['numero_operaciones'], dtype=tf.int64),
+      precio_promedio = tf.convert_to_tensor(vela['precio_promedio'], dtype=tf.float64),
+      volumen_cotizacion_promedio = tf.convert_to_tensor(vela['volumen_cotizacion_promedio'], dtype=tf.float64),
+      fluctua = tf.convert_to_tensor(vela['fluctua'], dtype=tf.float64),
+        
      
 
       # Create a dictionary with TensorFlow tensors
@@ -223,6 +226,7 @@ async def create_TFRecords():
   
   
 def create_candlestick_feature(candles):
+  # sourcery skip: merge-list-appends-into-extend
     """
     Convierte una lista de datos de una vela (candlestick) en una característica TensorFlow.
 
@@ -232,9 +236,9 @@ def create_candlestick_feature(candles):
     Returns:
       tf.train.Feature: Una característica TensorFlow con los datos de la vela.
     """
+    vela_caracteristica = [] # Initialize an empty list to store candle data
     for candel in candles:
-      # Nombres descriptivos para los datos de la vela (en español)
-      timestamp_apertura = int(candel['timestamp_apertura'])  # Assuming timestamp is in milliseconds
+      timestamp = float(candel['timestamp_apertura'])  # Assuming timestamp is in milliseconds
       precio_apertura = float(candel['precio_apertura'])
       precio_maximo = float(candel['precio_maximo'])
       precio_minimo = float(candel['precio_minimo'])
@@ -247,27 +251,26 @@ def create_candlestick_feature(candles):
       volumen_cotizacion_promedio = float(candel['volumen_cotizacion_promedio'])
       fluctua = float(candel['fluctua'])
 
-      # Crear una característica TensorFlow con nombres claros
-      vela_caracteristica = tf.train.Feature(
-          float_list=tf.train.FloatList(value=[
-              timestamp_apertura,
-              precio_apertura,
-              precio_maximo,
-              precio_minimo,
-              precio_cierre,
-              volumen,
-              timestamp_cierre,
-              volumen_activo_cotizacion,
-              numero_operaciones,
-              precio_promedio,
-              volumen_cotizacion_promedio,
-              fluctua,
-          ])
-  )
+        # Append candle data to the list
+      vela_caracteristica.append(timestamp)
+      vela_caracteristica.append(precio_apertura)
+      vela_caracteristica.append(precio_maximo)
+      vela_caracteristica.append(precio_minimo)
+      vela_caracteristica.append(precio_cierre)
+      vela_caracteristica.append(volumen)
+      vela_caracteristica.append(timestamp_cierre)
+      vela_caracteristica.append(volumen_activo_cotizacion)
+      vela_caracteristica.append(numero_operaciones)
+      vela_caracteristica.append(precio_promedio)
+      vela_caracteristica.append(volumen_cotizacion_promedio)
+      vela_caracteristica.append(fluctua)
 
+    # Create a TensorFlow Feature with the candle data
+    vela_caracteristica = tf.train.Feature(
+        float_list=tf.train.FloatList(value=vela_caracteristica)
+    )
     return vela_caracteristica
-
-
+  
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1 and sys.argv[1] == 'create_TFRecords':

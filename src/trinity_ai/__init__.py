@@ -4,7 +4,7 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import tensorflow as tf
 
 
-from .datasets.datasets import load_test_data,load_training_data,create_TFRecords
+from .datasets.datasets import load_test_data,load_training_data,create_TFRecords,load_data_from_tfrecords
 # from datasets import datasets
 print('carga datasets')
 from .models.tensorflowAiAdapter import load_model, save_model
@@ -23,6 +23,7 @@ async def initialize_trinity_model():
     
     # Cargar el modelo pre-entrenado si existe
     try:
+        print('creando tf')
         await create_TFRecords()
         model = load_model('./models/')
         print(model)
@@ -30,12 +31,14 @@ async def initialize_trinity_model():
             print('inicia modelo')
             print("Modelo de IA de Trinity cargado correctamente.")
             # Evaluar el modelo cargado
-            test_data = load_test_data('J:\ProyectosCriptoMon\DATI\src\trinity_ai\datasets\dataFut.json')
+            print('creando test')
+            test_data = load_data_from_tfrecords()
             accuracy = evaluate_model(model, test_data)
             print(f"Precisión del modelo: {accuracy:.2f}%")
             if accuracy < 0.8:  # Si la precisión es menor al 80%
                 print("Precisión del modelo inferior al 80%. Reentrenando...")
-                training_data = load_training_data()
+                print('creando treaning')
+                training_data = load_data_from_tfrecords()
                 model = train_model(training_data, test_data)
                 evaluate_model(model, test_data)
                 save_model(model, './models')
@@ -43,10 +46,13 @@ async def initialize_trinity_model():
         else:
         # except FileNotFoundError:
             print("No se encontró un modelo pre-entrenado. Entrenando un nuevo modelo...")
-
-            # Entrenar un nuevo modelo si no existe
-            training_data = load_training_data('J:\ProyectosCriptoMon\DATI\src\\trinity_ai\datasets\dataFut.json')
-            test_data = load_test_data('J:\ProyectosCriptoMon\DATI\src\\trinity_ai\datasets\dataFut.json')
+            print('creando entrenamiento')
+            # Entrenar un nuevo modelo si no existe}
+            print('creando traning')
+            training_data = await load_data_from_tfrecords(tfrecords_file_path='J:\ProyectosCriptoMon\DATI\src\\trinity_ai\datasets\\training.tfrecord')
+            print('creando test')
+            test_data = await load_data_from_tfrecords(tfrecords_file_path='J:\ProyectosCriptoMon\DATI\src\\trinity_ai\datasets\\training.tfrecord')
+            print('creando model')
             model = train_model(training_data, test_data)
             print('evaluate')
             evaluate_model(model, test_data)
