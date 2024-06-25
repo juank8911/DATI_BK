@@ -1,6 +1,8 @@
 # ./trinity_ai/__init__.py
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+import tensorflow as tf
+
 
 from .datasets.datasets import load_test_data,load_training_data,create_TFRecords
 # from datasets import datasets

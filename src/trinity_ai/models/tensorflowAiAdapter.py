@@ -1,8 +1,11 @@
 
 import threading
+import os
 import time
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import tensorflow as tf
 import ccxt as ccxt
+
 
 # print('tensorFlow')
 # # Función para cargar un modelo de IA pre-entrenado

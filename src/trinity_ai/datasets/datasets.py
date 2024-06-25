@@ -1,7 +1,8 @@
 import json
 import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import tensorflow as tf
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = 0
+
 # file_path = 'J:\ProyectosCriptoMon\DATI\src\trinity_ai\datasets\dataFut.json'
 
 
@@ -101,7 +102,7 @@ def load_test_data(file_path):
         return None  # Indicate file not found  
 
 
-def load_training_data(file_path='/dataFut.json'):
+def load_training_data(file_path='J:\ProyectosCriptoMon\DATI\src\trinity_ai\datasets\dataFut.json'):
   """
   Convierte datos JSON al formato TensorFlow para entrenamiento de modelos.
 
@@ -116,34 +117,36 @@ def load_training_data(file_path='/dataFut.json'):
   try:
     # Check if the file exists at the specified path
     if not os.path.isfile(file_path):
+      print('1N')
       raise FileNotFoundError(f"File not found: {file_path}")
-
     # Open the file and load JSON data
     with open(file_path) as f:
       datas = json.load(f)
-
+      print('1S')
     # Process each symbol's data
     tf_data = []
     for symbol_data in datas:
       symbol_dict = symbol_data['symbol']
-
+      print('1F')
       # Extract necessary information
       name = symbol_dict['name']
       data_klines = symbol_dict['data'][0]  # Assuming the first list contains kline data
-
+      print(data_klines)
       # Separate and convert data_klines (assuming specific structure)
       timestamps = tf.convert_to_tensor([int(x) for x in data_klines['timestamps']], dtype=tf.int64)  # Extract timestamps
+      print('2')
       precio_apertura = tf.convert_to_tensor([float(x) for x in data_klines['precio_apertura'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
+      print('2')
       precio_maximo = tf.convert_to_tensor([float(x) for x in data_klines['precio_maximo'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
       precio_minimo = tf.convert_to_tensor([float(x) for x in data_klines['precio_minimo'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
       precio_cierre = tf.convert_to_tensor([float(x) for x in data_klines['precio_cierre'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
-      volumen = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
-      timestamp_cierre = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
-      volumen_activo_cotizacion = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
-      numero_operaciones = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
-      precio_promedio = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
-      volumen_cotizacion_promedio = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
-      fluctua = tf.convert_to_tensor([float(x) for x in data_klines[1::7] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',  
+      volumen = tf.convert_to_tensor([float(x) for x in data_klines['volumen'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',,
+      timestamp_cierre = tf.convert_to_tensor([float(x) for x in data_klines['timestamp_cierre'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
+      volumen_activo_cotizacion = tf.convert_to_tensor([float(x) for x in data_klines['volumen_activo_cotizacion'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
+      numero_operaciones = tf.convert_to_tensor([float(x) for x in data_klines['numero_operaciones'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
+      precio_promedio = tf.convert_to_tensor([float(x) for x in data_klines['precio_promedio'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
+      volumen_cotizacion_promedio = tf.convert_to_tensor([float(x) for x in data_klines['volumen_cotizacion_promedio'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',
+      fluctua = tf.convert_to_tensor([float(x) for x in data_klines['fluctua'] if x != '0'], dtype=tf.float32)  # Extract numeric values, excluding '0',  
      
 
       # Create a dictionary with TensorFlow tensors
@@ -182,13 +185,13 @@ def load_training_data(file_path='/dataFut.json'):
 
 
 async def create_TFRecords():
-  """Converts dataFut.json to TFRecords and saves it to src\trinity_ai\datasets."""
+  """Converts dataFut.json to TFRecords and saves it to src\\trinity_ai\datasets."""
 
   # Path to the JSON file
-  json_file_path = 'src/trinity_ai/datasets/dataFut.json'  # Corrected path
+  json_file_path = 'J:\ProyectosCriptoMon\DATI\src\\trinity_ai\datasets\dataFut.json'  # Corrected path
 
   # Path to save the TFRecords file
-  tfrecords_file_path = 'src/trinity_ai/datasets/training.tfrecord'
+  tfrecords_file_path = 'J:\ProyectosCriptoMon\DATI\src\\trinity_ai\datasets\\training.tfrecord'
 
   # Load the JSON data
   with open(json_file_path, 'r') as f:
@@ -237,7 +240,7 @@ def create_candlestick_feature(candles):
       precio_minimo = float(candel['precio_minimo'])
       precio_cierre = float(candel['precio_cierre'])
       volumen = float(candel['volumen'])
-      timestamp_cierre = int(candel[6])  # Assuming timestamp is in milliseconds
+      timestamp_cierre = int(candel['timestamp_cierre'])  # Assuming timestamp is in milliseconds
       volumen_activo_cotizacion = float(candel['timestamp_cierre'])
       numero_operaciones = int(candel['numero_operaciones'])
       precio_promedio = float(candel['precio_promedio'])
@@ -263,3 +266,9 @@ def create_candlestick_feature(candles):
   )
 
     return vela_caracteristica
+
+
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == 'create_TFRecords':
+        create_TFRecords()

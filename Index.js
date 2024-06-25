@@ -80,7 +80,6 @@ app.get('/fexchange', async (req, res) => {
     console.log('dataFut.json file created successfully!');
       console.log("fin velas")
     // // Send the response
-   if(await velas){ CreateTFR()}
      res.status(200).json(await velas)
   } catch (error) {
     console.error('Error in /fexchange route:', error);
@@ -160,7 +159,7 @@ async function initializeAI() {
 
 // Inicia el servidor y prueba la conexión con Binance
 app.listen(port, async () => {
-    // await initializeAI()
+    await initializeAI()
     await testConection();
     console.log(`La aplicación DATI está corriendo en http://localhost:${port}`);
     // console.log(`el Socket DATI está corriendo en http://localhost:8080`);

@@ -67,26 +67,31 @@ async function testConectionMiddleware() {
 }
 
 
-async function CreateTFR()
-{
+async function CreateTFR() {
+  console.log('create');
   try {
-    const pythonProcess = spawn('python', ['./src/trinity_ai/datasets/datasets.py', 'create_TFRecords']);
+      const pythonProcess = await spawn('python', ['./src/trinity_ai/datasets/datasets.py', 'create_TFRecords()']);
+      console.log('charge');
 
-    // Handle Python script output (optional)
-    pythonProcess.stdout.on('data', (data) => {
-      console.log(`Python script output: ${data}`);
-    });
+      // Handle Python script output (optional)
+      pythonProcess.stdout.on('data', (data) => {
+          console.log('stdout');
+          console.log(`Python script output: ${data}`);
+      });
 
-    pythonProcess.stderr.on('data', (data) => {
-      console.error(`Python script error: ${data}`);
-    });
+      pythonProcess.stderr.on('data', (data) => {
+          console.log('stderr');
+          console.error(`Python script error: ${data}`);
+      });
 
-    // Wait for the Python script to finish (optional)
-    pythonProcess.on('close', (code) => {
-      console.log(`Python script exited with code ${code}`);
-    });
+      // Wait for the Python script to finish (optional)
+      pythonProcess.on('close', (code) => {
+          console.log('close');
+          console.log(`Python script exited with code ${code}`);
+      });
   } catch (error) {
-    
+    console.log('error')
+      console.error('Error running Python script:', error);
   }
 }
 
